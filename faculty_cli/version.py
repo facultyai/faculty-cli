@@ -18,7 +18,7 @@ import platform
 from pkg_resources import get_distribution, DistributionNotFound
 
 try:
-    __version__ = "0.0.1" # get_distribution("faculty-cli").version
+    __version__ = get_distribution("faculty-cli").version
 except DistributionNotFound:
     # package is not installed
     pass

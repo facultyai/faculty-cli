@@ -75,7 +75,7 @@ def _print_and_exit(msg, code):
 
 def _get_pypi_versions():
     """List releases available from PyPI."""
-    response = requests.get("https://pypi.python.org/pypi/faculty-cli/json", timeout=1)
+    response = requests.get("https://pypi.org/pypi/faculty-cli/json", timeout=1)
     versions = response.json()["releases"].keys()
     return [StrictVersion(v) for v in versions]
 
