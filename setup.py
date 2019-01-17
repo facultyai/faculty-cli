@@ -32,7 +32,7 @@ def read_long_description():
 
 
 setup(
-    name="sml",
+    name="faculty-cli",
     description="The command line interface to SherlockML",
     long_description=read_long_description(),
     long_description_content_type="text/markdown",
