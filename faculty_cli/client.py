@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 from contextlib import contextmanager
-
+import json
 import requests
+
 import faculty_cli.auth
 import faculty_cli.version
 

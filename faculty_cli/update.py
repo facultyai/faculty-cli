@@ -47,7 +47,7 @@ def _last_update_path():
     if not xdg_cache_dir:
         xdg_cache_dir = os.path.expanduser("~/.cache")
 
-    return os.path.join(xdg_cache_dir, "sherlockml", "last_update_check") # TODO Change?
+    return os.path.join(xdg_cache_dir, "faculty", "last_update_check")
 
 
 def _get_pypi_versions():

@@ -18,6 +18,7 @@
 import os
 
 import click
+
 import faculty.config
 
 

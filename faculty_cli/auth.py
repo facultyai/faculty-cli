@@ -38,7 +38,7 @@ def _token_cache_path():
     if not xdg_cache_dir:
         xdg_cache_dir = os.path.expanduser("~/.cache")
 
-    return os.path.join(xdg_cache_dir, "sherlockml", "token-cache.json") # TODO Change?
+    return os.path.join(xdg_cache_dir, "faculty", "token-cache.json")
 
 
 def _raise_on_hudson_error(response, valid_status_codes=None):
