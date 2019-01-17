@@ -1,0 +1,9 @@
+*.egg-info
+*.pyc
+.eggs/
+.cache/
+.mypy_cache/
+.pytest_cache/
+/build/
+/dist/
+.pipfile
