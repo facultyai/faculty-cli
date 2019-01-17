@@ -25,7 +25,7 @@ class BaskervilleError(faculty_cli.client.FacultyServiceError):
 
 
 class ServerEnvironment(object):
-    """A Faculty platform server environment."""
+    """A Faculty server environment."""
 
     # pylint: disable=too-few-public-methods
 

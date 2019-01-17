@@ -149,7 +149,7 @@ def _ensure_creds_file_present():
         msg = textwrap.dedent(
             """\
         It looks like this is the first time you've used faculty_cli on this computer,
-        so you must enter your Faculty platform credentials. They'll be saved so you
+        so you must enter your Faculty credentials. They'll be saved so you
         don't have to enter them again.
         """
         )
@@ -299,7 +299,7 @@ def _get_ssh_details(project_id, server_id):
 
 
 PERMISSION_DENIED_MESSAGE = """
-Permission was denied when attempting to connect to your Faculty platform server. A
+Permission was denied when attempting to connect to your Faculty server. A
 bug in earlier versions of OpenSSH (including the version distributed with
 macOS 10.10) may be the cause - please try updating your operating system or
 SSH version and try again.
@@ -341,7 +341,7 @@ class FacultyCLIGroup(click.Group):
 
 @click.group(cls=FacultyCLIGroup)
 def cli():
-    """Command line interface to Faculty platform."""
+    """Command line interface to Faculty."""
     try:
         faculty_cli.update.check_for_new_release()
     except Exception:  # pylint: disable=broad-except
@@ -356,7 +356,7 @@ def version():
 
 @cli.command()
 def login():
-    """Write Faculty platform credentials to file."""
+    """Write Faculty credentials to file."""
     credentials_file = faculty.config.default_credentials_path()
     if os.path.exists(credentials_file):
         if not click.confirm("Overwrite existing credentials file?"):
@@ -372,7 +372,7 @@ def login():
     help="Print extra information about projects.",
 )
 def projects(verbose):
-    """List accessible Faculty platform projects."""
+    """List accessible Faculty projects."""
     _check_credentials()
     client = faculty_cli.casebook.Casebook()
     user_id = faculty_cli.auth.user_id()
@@ -395,7 +395,7 @@ def projects(verbose):
 
 @cli.group()
 def server():
-    """Manipulate Faculty platform servers."""
+    """Manipulate Faculty servers."""
     pass
 
 
@@ -414,7 +414,7 @@ def server():
     help="Print extra information about servers.",
 )
 def list_servers(project, all, verbose):
-    """List your Faculty platform servers."""
+    """List your Faculty servers."""
     _check_credentials()
     client = faculty_cli.galleon.Galleon()
     status_filter = None if all else "running"
@@ -466,7 +466,7 @@ def list_servers(project, all, verbose):
 @click.argument("project")
 @click.option("--server", is_flag=False, help="Name or ID of server to use.")
 def open_(project, server):
-    """Open a Faculty platform server in your browser."""
+    """Open a Faculty server in your browser."""
     project_id, server_id = _resolve_server(project, server)
     client = faculty_cli.galleon.Galleon()
     server = client.get_server(project_id, server_id)
@@ -545,7 +545,7 @@ def new(
     environments,
     wait,
 ):
-    """Create a new Faculty platform server."""
+    """Create a new Faculty server."""
     # pylint: disable=too-many-arguments
     _check_credentials()
     project_id = _resolve_project(project)
@@ -589,7 +589,7 @@ def new(
 @click.argument("project")
 @click.argument("server")
 def terminate(project, server):
-    """Terminate a Faculty platform server."""
+    """Terminate a Faculty server."""
     _check_credentials()
     _, server_id = _resolve_server(project, server, ensure_running=False)
     client = faculty_cli.galleon.Galleon()
@@ -649,7 +649,7 @@ def instance_types(verbose):
 @click.argument("server")
 @click.argument("ssh_opts", nargs=-1, type=click.UNPROCESSED)
 def shell(project, server, ssh_opts):
-    """Open a shell on a Faculty platform server.
+    """Open a shell on a Faculty server.
 
     Any additional arguments given are passed on to SSH. This allows you to set
     up, for example, port forwarding:
@@ -685,7 +685,7 @@ def shell(project, server, ssh_opts):
 
 @cli.group()
 def environment():
-    """Manipulate Faculty platform server environments."""
+    """Manipulate Faculty server environments."""
     _check_credentials()
 
 
@@ -819,7 +819,7 @@ def logs(project, server, step_number):
 
 @cli.group()
 def job():
-    """Manipulate Faculty platform jobs."""
+    """Manipulate Faculty jobs."""
     pass
 
 
@@ -1026,7 +1026,7 @@ def job_run_logs(project, job, run):
 
 @cli.group()
 def file():
-    """Manipulate files in a Faculty platform project."""
+    """Manipulate files in a Faculty project."""
     _check_credentials()
 
 
@@ -1036,7 +1036,7 @@ def file():
 @click.argument("remote")
 @click.option("--server", is_flag=False, help="Name or ID of server to use.")
 def put(project, local, remote, server):
-    """Copy a local file to the Faculty platform workspace."""
+    """Copy a local file to Faculty workspace."""
 
     project_id, server_id = _resolve_server(project, server)
 
@@ -1071,7 +1071,7 @@ def put(project, local, remote, server):
 @click.argument("local")
 @click.option("--server", is_flag=False, help="Name or ID of server to use.")
 def get(project, remote, local, server):
-    """Copy a file from the Faculty platform workspace to the local machine."""
+    """Copy a file from Faculty workspace to the local machine."""
 
     project_id, server_id = _resolve_server(project, server)
 
@@ -1168,7 +1168,7 @@ def sync_down(project, remote, local, server, rsync_opts):
 @click.argument("project")
 @click.argument("path")
 def ls(project, path):
-    """List files and directories on the Faculty platform workspace."""
+    """List files and directories on Faculty workspace."""
 
     project_id = _resolve_project(project)
     relative_path = os.path.relpath(path, "/project")

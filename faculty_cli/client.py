@@ -1,4 +1,4 @@
-"""Interact with a Faculty platform service."""
+"""Interact with a Faculty service."""
 
 # Copyright 2016-2019 ASI Data Science
 #
@@ -23,7 +23,7 @@ import faculty_cli.version
 
 
 class FacultyServiceError(Exception):
-    """Exception for errors interacting with a Faculty platform service."""
+    """Exception for errors interacting with a Faculty service."""
 
     def __init__(self, message, status_code=None):
         super(FacultyServiceError, self).__init__(message)
@@ -65,7 +65,7 @@ class ServerSentEventMessage(object):
 
 
 class FacultyService(object):
-    """A client for interacting with a Faculty platform service."""
+    """A client for interacting with a Faculty service."""
 
     def __init__(self, url, cookie_auth=False):
         self._session = requests.Session()

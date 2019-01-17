@@ -1,4 +1,4 @@
-"""Authenticate with the Faculty platform."""
+"""Authenticate with Faculty."""
 
 # Copyright 2016-2019 ASI Data Science
 #
@@ -55,14 +55,14 @@ def _raise_on_hudson_error(response, valid_status_codes=None):
             error = ""
             error_description = ""
         raise AuthenticationError(
-            "Failed to authenticate with the Faculty platform: {} {}".format(
+            "Failed to authenticate with Faculty: {} {}".format(
                 error, error_description
             )
         )
 
 
 class TokenCache(object):
-    """Disk-persisted cache for Faculty platform access tokens."""
+    """Disk-persisted cache for Faculty access tokens."""
 
     def __init__(self):
         self._cache_path = _token_cache_path()
@@ -110,7 +110,7 @@ class TokenCache(object):
 
 
 class Session(object):
-    """Session with the Faculty platform authentication service."""
+    """Session with Faculty authentication service."""
 
     def __init__(self, url, profile):
         self._session = requests.Session()

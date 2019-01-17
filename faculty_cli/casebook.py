@@ -19,7 +19,7 @@ import faculty_cli.config
 
 
 class Project(object):
-    """A Faculty platform project."""
+    """A Faculty project."""
 
     # pylint: disable=too-few-public-methods
 

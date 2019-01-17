@@ -1,4 +1,4 @@
-"""The command line interface to the Faculty platform."""
+"""The command line interface to the Faculty."""
 
 # Copyright 2016-2019 ASI Data Science
 #

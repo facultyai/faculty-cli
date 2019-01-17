@@ -27,7 +27,7 @@ class GalleonError(faculty_cli.client.FacultyServiceError):
 
 
 class Server(object):
-    """A Faculty platform server."""
+    """A Faculty server."""
 
     # pylint: disable=too-few-public-methods
 
@@ -164,7 +164,7 @@ class Galleon(faculty_cli.client.FacultyService):
         super(Galleon, self).__init__(faculty_cli.config.galleon_url())
 
     def get_all_servers(self):
-        """List all Faculty platform servers known to Galleon.
+        """List all Faculty servers known to Galleon.
 
         This method requires administrative privileges not available to normal
         users.
@@ -198,7 +198,7 @@ class Galleon(faculty_cli.client.FacultyService):
         type_version=None,
         environment_ids=None,
     ):
-        """Create a new Faculty platform server."""
+        """Create a new Faculty server."""
 
         if machine_type == "custom":
             if milli_cpus is None or memory_mb is None:
