@@ -1,6 +1,6 @@
 """Interact with Hound."""
 
-# Copyright 2016-2018 ASI Data Science
+# Copyright 2016-2019 Faculty Data Science
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@
 
 import requests
 
-import sml.client
-import sml.config
+import faculty_cli.client
+import faculty_cli.config
 
 SERVER_RESOURCES_EVENT = "@SSE/SERVER_RESOURCES_UPDATED"
 
 
-class HoundError(sml.client.SherlockMLServiceError):
+class HoundError(faculty_cli.client.FacultyServiceError):
     pass
 
 
@@ -124,7 +124,7 @@ class EnvironmentExecutionStep(object):
         )
 
 
-class Hound(sml.client.SherlockMLService):
+class Hound(faculty_cli.client.FacultyService):
     """A Hound client."""
 
     def __init__(self, hound_url):
@@ -146,7 +146,7 @@ class Hound(sml.client.SherlockMLService):
         """Get the latest environment execution on the server."""
         try:
             resp = self._get("/execution/latest")
-        except sml.client.SherlockMLServiceError as err:
+        except faculty_cli.client.FacultyServiceError as err:
             if err.status_code == 404:
                 return None
             else:

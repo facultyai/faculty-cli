@@ -6,9 +6,9 @@ release: lint
 	twine upload dist/*
 
 clean:
-	$(RM) -r build dist sml.egg-info
+	$(RM) -r build dist faculty_cli.egg-info
 
 lint:
-	python -m compileall sml
-	flake8 sml
-	mypy sml || true
+	python -m compileall faculty_cli
+	flake8 faculty_cli
+	mypy faculty_cli || true

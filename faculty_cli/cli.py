@@ -1,6 +1,6 @@
 """Command line interface."""
 
-# Copyright 2016-2018 ASI Data Science
+# Copyright 2016-2019 Faculty Data Science
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,24 +32,24 @@ from distutils.version import StrictVersion
 
 import click
 import requests
-import sherlockml
-import sherlockml.config
-from sherlockml.clients.job import JobClient
-from sherlockml.clients.log import LogClient
-from sherlockml.clients.base import NotFound
+import faculty
+import faculty.config
+from faculty.clients.job import JobClient
+from faculty.clients.log import LogClient
+from faculty.clients.base import NotFound
 from tabulate import tabulate
 
-import sml.auth
-import sml.config
-import sml.baskerville
-import sml.casebook
-import sml.client
-import sml.galleon
-import sml.hound
-import sml.parse
-import sml.shell
-import sml.update
-import sml.version
+import faculty_cli.auth
+import faculty_cli.config
+import faculty_cli.baskerville
+import faculty_cli.casebook
+import faculty_cli.client
+import faculty_cli.galleon
+import faculty_cli.hound
+import faculty_cli.parse
+import faculty_cli.shell
+import faculty_cli.update
+import faculty_cli.version
 
 SSH_OPTIONS = [
     "-o",
@@ -75,7 +75,7 @@ def _print_and_exit(msg, code):
 
 def _get_pypi_versions():
     """List releases available from PyPI."""
-    response = requests.get("https://pypi.python.org/pypi/sml/json", timeout=1)
+    response = requests.get("https://pypi.python.org/pypi/sml/json", timeout=1) # TODO change
     versions = response.json()["releases"].keys()
     return [StrictVersion(v) for v in versions]
 
@@ -84,19 +84,19 @@ def _populate_creds_file():
     """Prompt user for client ID and secret and save them."""
     while True:
         domain = click.prompt(
-            "Domain", default="services.sherlockml.com", err=True
+            "Domain", default="services.faculty.com", err=True # TODO Change?
         )
         client_id = click.prompt("Client ID", err=True).strip()
         client_secret = click.prompt("Client secret", err=True).strip()
 
-        profile = sherlockml.config.Profile(
+        profile = faculty.config.Profile(
             domain=domain,
             protocol="https",
             client_id=client_id,
             client_secret=client_secret,
         )
 
-        if sml.auth.credentials_valid(profile):
+        if faculty_cli.auth.credentials_valid(profile):
             break
 
         click.echo("Invalid credentials. Please try again.", err=True)
@@ -111,7 +111,7 @@ def _populate_creds_file():
             client_id=client_id, client_secret=client_secret, domain=domain
         )
     )
-    credentials_file = sherlockml.config.default_credentials_path()
+    credentials_file = faculty.config.default_credentials_path()
     try:
         os.makedirs(os.path.dirname(credentials_file))
     except OSError:
@@ -126,7 +126,7 @@ def _populate_creds_file():
 
 def _check_creds_file_perms():
     """Check the permissions of the credentials file are correct."""
-    credentials_file = sherlockml.config.default_credentials_path()
+    credentials_file = faculty.config.default_credentials_path()
     if oct(os.stat(credentials_file).st_mode & 0o777)[-2:] != "00":
         msg = textwrap.dedent(
             """\
@@ -142,14 +142,14 @@ def _check_creds_file_perms():
 
 def _ensure_creds_file_present():
     """Ensure the user's credentials file is present."""
-    credentials_file = sherlockml.config.default_credentials_path()
+    credentials_file = faculty.config.default_credentials_path()
     try:
         open(credentials_file)
     except IOError:
         msg = textwrap.dedent(
             """\
-        It looks like this is the first time you've used sml on this computer,
-        so you must enter your SherlockML credentials. They'll be saved so you
+        It looks like this is the first time you've used faculty_cli on this computer,
+        so you must enter your Faculty platform credentials. They'll be saved so you
         don't have to enter them again.
         """
         )
@@ -160,8 +160,8 @@ def _ensure_creds_file_present():
 def _check_credentials():
     """Check if credentials are present in environment or config file."""
     try:
-        sml.config.get_profile()
-    except sherlockml.config.CredentialsError:
+        faculty_cli.config.get_profile()
+    except faculty.config.CredentialsError:
         _ensure_creds_file_present()
         _check_creds_file_perms()
 
@@ -171,15 +171,15 @@ def _resolve_project(project):
     try:
         project_id = uuid.UUID(project)
     except ValueError:
-        user_id = sml.auth.user_id()
-        client = sml.casebook.Casebook()
+        user_id = faculty_cli.auth.user_id()
+        client = faculty_cli.casebook.Casebook()
         project_id = client.get_project_by_name(user_id, project).id_
     return project_id
 
 
 def _server_by_name(project_id, server_name, status=None):
     """Resolve a project ID and server name to a server ID."""
-    client = sml.galleon.Galleon()
+    client = faculty_cli.galleon.Galleon()
     matching_servers = client.get_servers(project_id, server_name, status)
     if len(matching_servers) == 1:
         return matching_servers[0]
@@ -197,7 +197,7 @@ def _server_by_name(project_id, server_name, status=None):
 
 def _any_server(project_id, status=None):
     """Get any running server from project."""
-    client = sml.galleon.Galleon()
+    client = faculty_cli.galleon.Galleon()
     servers_ = client.get_servers(project_id, status=status)
     if not servers_:
         adjective = "available" if status is None else status
@@ -221,7 +221,7 @@ def _resolve_server(project, server=None, ensure_running=True):
 def _job_by_name(project_id, job_name):
     """Resolve a project ID and job name to a job ID."""
 
-    client = JobClient(sml.config.get_profile())
+    client = JobClient(faculty_cli.config.get_profile())
     jobs = client.list(project_id)
     matching_jobs = [job for job in jobs if job.metadata.name == job_name]
     if len(matching_jobs) == 1:
@@ -248,7 +248,7 @@ def _resolve_job(project, job):
 
 
 def _environment_by_name(project_id, environment_name):
-    client = sml.baskerville.Baskerville()
+    client = faculty_cli.baskerville.Baskerville()
     matching_environments = client.get_environments(
         project_id, environment_name
     )
@@ -286,20 +286,20 @@ def _save_key_to_file(key):
 
 
 def _get_ssh_details(project_id, server_id):
-    client = sml.galleon.Galleon()
+    client = faculty_cli.galleon.Galleon()
     for _ in range(20):
         try:
             return client.ssh_details(project_id, server_id)
-        except sml.auth.AuthenticationError as err:
+        except faculty_cli.auth.AuthenticationError as err:
             _print_and_exit(err, 77)
-        except sml.client.SherlockMLServiceError:
+        except faculty_cli.client.FacultyServiceError:
             click.echo("Server still starting, waiting 30 seconds")
         time.sleep(30)
     _print_and_exit("Could not connect to server", 69)
 
 
 PERMISSION_DENIED_MESSAGE = """
-Permission was denied when attempting to connect to your SherlockML server. A
+Permission was denied when attempting to connect to your Faculty platform server. A
 bug in earlier versions of OpenSSH (including the version distributed with
 macOS 10.10) may be the cause - please try updating your operating system or
 SSH version and try again.
@@ -327,37 +327,37 @@ def _format_datetime(timestamp):
         return timestamp.strftime("%Y-%m-%d %H:%M")
 
 
-class SherlockMLCLIGroup(click.Group):
+class FacultyCLIGroup(click.Group):
     def __call__(self, *args, **kwargs):
         try:
-            super(SherlockMLCLIGroup, self).__call__(*args, **kwargs)
+            super(FacultyCLIGroup, self).__call__(*args, **kwargs)
         except AmbiguousNameError as err:
             _print_and_exit(err, 64)
-        except sml.auth.AuthenticationError as err:
+        except faculty_cli.auth.AuthenticationError as err:
             _print_and_exit(err, 77)
-        except sml.client.SherlockMLServiceError as err:
+        except faculty_cli.client.FacultyServiceError as err:
             _print_and_exit(err, 69)
 
 
-@click.group(cls=SherlockMLCLIGroup)
+@click.group(cls=FacultyCLIGroup)
 def cli():
-    """Command line interface to SherlockML."""
+    """Command line interface to Faculty platform."""
     try:
-        sml.update.check_for_new_release()
+        faculty_cli.update.check_for_new_release()
     except Exception:  # pylint: disable=broad-except
         pass
 
 
 @cli.command()
 def version():
-    """Print the sml version number."""
-    click.echo(sml.version.__version__)
+    """Print the faculty_cli version number."""
+    click.echo(faculty_cli.version.__version__)
 
 
 @cli.command()
 def login():
-    """Write SherlockML credentials to file."""
-    credentials_file = sherlockml.config.default_credentials_path()
+    """Write Faculty platform credentials to file."""
+    credentials_file = faculty.config.default_credentials_path()
     if os.path.exists(credentials_file):
         if not click.confirm("Overwrite existing credentials file?"):
             return
@@ -372,10 +372,10 @@ def login():
     help="Print extra information about projects.",
 )
 def projects(verbose):
-    """List accessible SherlockML projects."""
+    """List accessible Faculty platform projects."""
     _check_credentials()
-    client = sml.casebook.Casebook()
-    user_id = sml.auth.user_id()
+    client = faculty_cli.casebook.Casebook()
+    user_id = faculty_cli.auth.user_id()
     projects_ = client.get_projects(user_id)
     if verbose:
         if not projects_:
@@ -395,7 +395,7 @@ def projects(verbose):
 
 @cli.group()
 def server():
-    """Manipulate SherlockML servers."""
+    """Manipulate Faculty platform servers."""
     pass
 
 
@@ -414,9 +414,9 @@ def server():
     help="Print extra information about servers.",
 )
 def list_servers(project, all, verbose):
-    """List your SherlockML servers."""
+    """List your Faculty platform servers."""
     _check_credentials()
-    client = sml.galleon.Galleon()
+    client = faculty_cli.galleon.Galleon()
     status_filter = None if all else "running"
     project_id = _resolve_project(project)
     servers_ = client.get_servers(project_id, status=status_filter)
@@ -466,9 +466,9 @@ def list_servers(project, all, verbose):
 @click.argument("project")
 @click.option("--server", is_flag=False, help="Name or ID of server to use.")
 def open_(project, server):
-    """Open a SherlockML server in your browser."""
+    """Open a Faculty platform server in your browser."""
     project_id, server_id = _resolve_server(project, server)
-    client = sml.galleon.Galleon()
+    client = faculty_cli.galleon.Galleon()
     server = client.get_server(project_id, server_id)
     https_services = [
         service for service in server.services if service.name == "https"
@@ -545,7 +545,7 @@ def new(
     environments,
     wait,
 ):
-    """Create a new SherlockML server."""
+    """Create a new Faculty platform server."""
     # pylint: disable=too-many-arguments
     _check_credentials()
     project_id = _resolve_project(project)
@@ -562,7 +562,7 @@ def new(
         milli_cpus = None
         memory_mb = None
 
-    client = sml.galleon.Galleon()
+    client = faculty_cli.galleon.Galleon()
     server_id = client.create_server(
         project_id,
         type_,
@@ -589,10 +589,10 @@ def new(
 @click.argument("project")
 @click.argument("server")
 def terminate(project, server):
-    """Terminate a SherlockML server."""
+    """Terminate a Faculty platform server."""
     _check_credentials()
     _, server_id = _resolve_server(project, server, ensure_running=False)
-    client = sml.galleon.Galleon()
+    client = faculty_cli.galleon.Galleon()
     client.terminate_server(server_id)
 
 
@@ -607,7 +607,7 @@ def instance_types(verbose):
     """
     List the types of servers available on dedicated infrastructure.
     """
-    client = sherlockml.client("cluster")
+    client = faculty.client("cluster")
     types = client.list_single_tenanted_node_types(
         interactive_instances_configured=True
     )
@@ -649,17 +649,17 @@ def instance_types(verbose):
 @click.argument("server")
 @click.argument("ssh_opts", nargs=-1, type=click.UNPROCESSED)
 def shell(project, server, ssh_opts):
-    """Open a shell on an SherlockML server.
+    """Open a shell on a Faculty platform server.
 
     Any additional arguments given are passed on to SSH. This allows you to set
     up, for example, port forwarding:
 
-    $ sml shell <project> <server> -L 9000:localhost:8888
+    $ faculty shell <project> <server> -L 9000:localhost:8888
     """
     _check_credentials()
 
     project_id, server_id = _resolve_server(project, server)
-    client = sml.galleon.Galleon()
+    client = faculty_cli.galleon.Galleon()
     details = client.ssh_details(project_id, server_id)
 
     hostname = details["hostname"]
@@ -685,7 +685,7 @@ def shell(project, server, ssh_opts):
 
 @cli.group()
 def environment():
-    """Manipulate SherlockML server environments."""
+    """Manipulate Faculty platform server environments."""
     _check_credentials()
 
 
@@ -699,7 +699,7 @@ def environment():
 )
 def list_environments(project, verbose):
     """List your environments."""
-    client = sml.baskerville.Baskerville()
+    client = faculty_cli.baskerville.Baskerville()
     project_id = _resolve_project(project)
     environments = client.get_environments(project_id)
     if verbose:
@@ -727,7 +727,7 @@ def apply(project, server, environment):
     project_id, server_id = _resolve_server(project, server)
     environment_id = _resolve_environment(project_id, environment)
 
-    client = sml.galleon.Galleon()
+    client = faculty_cli.galleon.Galleon()
     client.apply_environment(server_id, environment_id)
 
     click.echo(
@@ -754,10 +754,10 @@ def status(project, server):
     """Get the execution status for an environment."""
     project_id, server_id = _resolve_server(project, server)
 
-    galleon_client = sml.galleon.Galleon()
+    galleon_client = faculty_cli.galleon.Galleon()
     server = galleon_client.get_server(project_id, server_id)
 
-    client = sml.hound.Hound(server.hound_url)
+    client = faculty_cli.hound.Hound(server.hound_url)
     execution = client.latest_environment_execution()
 
     if execution is None:
@@ -790,10 +790,10 @@ def logs(project, server, step_number):
     """Stream the logs for a server environment application."""
     project_id, server_id = _resolve_server(project, server)
 
-    galleon_client = sml.galleon.Galleon()
+    galleon_client = faculty_cli.galleon.Galleon()
     server = galleon_client.get_server(project_id, server_id)
 
-    client = sml.hound.Hound(server.hound_url)
+    client = faculty_cli.hound.Hound(server.hound_url)
     execution = client.latest_environment_execution()
 
     if execution is None:
@@ -819,7 +819,7 @@ def logs(project, server, step_number):
 
 @cli.group()
 def job():
-    """Manipulate SherlockML jobs."""
+    """Manipulate Faculty platform jobs."""
     pass
 
 
@@ -833,7 +833,7 @@ def list_jobs(project, verbose):
 
     project_id = _resolve_project(project)
 
-    client = JobClient(sml.config.get_profile())
+    client = JobClient(faculty_cli.config.get_profile())
     jobs = client.list(project_id)
     if verbose:
         if not jobs:
@@ -862,7 +862,7 @@ def list_job_runs(project, job, verbose):
 
     project_id, job_id = _resolve_job(project, job)
 
-    client = JobClient(sml.config.get_profile())
+    client = JobClient(faculty_cli.config.get_profile())
 
     def list_runs():
         list_runs_result = client.list_runs(project_id, job_id)
@@ -918,7 +918,7 @@ def list_job_runs(project, job, verbose):
 @click.argument("job")
 @click.argument(
     "parameter_values",
-    type=sml.parse.parse_parameter_values,
+    type=faculty_cli.parse.parse_parameter_values,
     nargs=-1,
     required=False,
 )
@@ -928,19 +928,19 @@ def run_job(project, job, parameter_values, num_subruns):
 
     \b
     To run a single job:
-    $ sml job run PROJECT JOB
+    $ faculty job run PROJECT JOB
 
     \b
     To run a single job with parameters:
-    $ sml job run PROJECT JOB "foo=bar,eggs=spam"
+    $ faculty job run PROJECT JOB "foo=bar,eggs=spam"
 
     \b
     To run a job multiple times with different parameters:
-    $ sml job run PROJECT JOB "foo=bar,eggs=spam" "foo=bar2,eggs=spam2"
+    $ faculty job run PROJECT JOB "foo=bar,eggs=spam" "foo=bar2,eggs=spam2"
 
     \b
     To run a job multiple times with no parameters:
-    $ sml job run PROJECT JOB --num-subruns 2
+    $ faculty job run PROJECT JOB --num-subruns 2
     """
 
     if num_subruns is None and not parameter_values:
@@ -956,7 +956,7 @@ def run_job(project, job, parameter_values, num_subruns):
 
     project_id, job_id = _resolve_job(project, job)
 
-    client = JobClient(sml.config.get_profile())
+    client = JobClient(faculty_cli.config.get_profile())
     client.create_run(project_id, job_id, parameter_values)
 
     if len(parameter_values) == 1:
@@ -976,13 +976,13 @@ def run_job(project, job, parameter_values, num_subruns):
 @job.command("logs")
 @click.argument("project")
 @click.argument("job")
-@click.argument("run", type=sml.parse.parse_run_identifier)
+@click.argument("run", type=faculty_cli.parse.parse_run_identifier)
 def job_run_logs(project, job, run):
     """Print the logs for a run."""
 
     project_id, job_id = _resolve_job(project, job)
 
-    job_client = JobClient(sml.config.get_profile())
+    job_client = JobClient(faculty_cli.config.get_profile())
     run_details = job_client.get_run(project_id, job_id, run.run_number)
     if run.subrun_number is not None:
         subrun_number = run.subrun_number
@@ -1001,7 +1001,7 @@ def job_run_logs(project, job, run):
         project_id, job_id, run.run_number, subrun_number
     )
 
-    log_client = LogClient(sml.config.get_profile())
+    log_client = LogClient(faculty_cli.config.get_profile())
 
     for env_step_exec in subrun_details.environment_step_executions:
         env_name = env_step_exec.environment_name
@@ -1026,7 +1026,7 @@ def job_run_logs(project, job, run):
 
 @cli.group()
 def file():
-    """Manipulate files in a SherlockML project."""
+    """Manipulate files in a Faculty platform project."""
     _check_credentials()
 
 
@@ -1036,14 +1036,14 @@ def file():
 @click.argument("remote")
 @click.option("--server", is_flag=False, help="Name or ID of server to use.")
 def put(project, local, remote, server):
-    """Copy a local file to the SherlockML workspace."""
+    """Copy a local file to the Faculty platform workspace."""
 
     project_id, server_id = _resolve_server(project, server)
 
-    client = sml.galleon.Galleon()
+    client = faculty_cli.galleon.Galleon()
     details = client.ssh_details(project_id, server_id)
 
-    escaped_remote = sml.shell.quote(remote)
+    escaped_remote = faculty_cli.shell.quote(remote)
 
     hostname = details["hostname"]
     port = details["port"]
@@ -1071,14 +1071,14 @@ def put(project, local, remote, server):
 @click.argument("local")
 @click.option("--server", is_flag=False, help="Name or ID of server to use.")
 def get(project, remote, local, server):
-    """Copy a file from the SherlockML workspace to the local machine."""
+    """Copy a file from the Faculty platform workspace to the local machine."""
 
     project_id, server_id = _resolve_server(project, server)
 
-    client = sml.galleon.Galleon()
+    client = faculty_cli.galleon.Galleon()
     details = client.ssh_details(project_id, server_id)
 
-    escaped_remote = sml.shell.quote(remote)
+    escaped_remote = faculty_cli.shell.quote(remote)
 
     hostname = details["hostname"]
     port = details["port"]
@@ -1105,7 +1105,7 @@ def _rsync(project, local, remote, server, rsync_opts, up):
 
     project_id, server_id = _resolve_server(project, server)
 
-    client = sml.galleon.Galleon()
+    client = faculty_cli.galleon.Galleon()
     details = client.ssh_details(project_id, server_id)
 
     hostname = details["hostname"]
@@ -1113,7 +1113,7 @@ def _rsync(project, local, remote, server, rsync_opts, up):
     username = details["username"]
     key = details["key"]
 
-    escaped_remote = sml.shell.quote(remote)
+    escaped_remote = faculty_cli.shell.quote(remote)
     if up:
         path_from = local
         path_to = u"{}@{}:{}".format(username, hostname, escaped_remote)
@@ -1168,11 +1168,11 @@ def sync_down(project, remote, local, server, rsync_opts):
 @click.argument("project")
 @click.argument("path")
 def ls(project, path):
-    """List files and directories on the SherlockML workspace."""
+    """List files and directories on the Faculty platform workspace."""
 
     project_id = _resolve_project(project)
     relative_path = os.path.relpath(path, "/project")
-    client = sherlockml.client("workspace")
+    client = faculty.client("workspace")
 
     try:
         directory_details_list = client.list(

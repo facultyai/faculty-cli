@@ -1,12 +1,12 @@
 import pytest
 
-import sherlockml.config
+import faculty.config
 
-import sml.config
+import faculty_cli.config
 
 
-PROFILE = sherlockml.config.Profile(
-    domain="services.subdomain.sherlockml.net",
+PROFILE = faculty.config.Profile(
+    domain="services.subdomain.my.faculty.ai",
     protocol="protocol",
     client_id="client id",
     client_secret="client secret",
@@ -15,32 +15,32 @@ PROFILE = sherlockml.config.Profile(
 
 @pytest.fixture
 def mock_profile(mocker):
-    mocker.patch("sherlockml.config.resolve_profile", return_value=PROFILE)
+    mocker.patch("faculty.config.resolve_profile", return_value=PROFILE)
 
 
 def test_casebook_url(mock_profile):
     assert (
-        sml.config.casebook_url()
-        == "protocol://casebook.services.subdomain.sherlockml.net"
+        faculty_cli.config.casebook_url()
+        == "protocol://casebook.services.subdomain.my.faculty.ai"
     )
 
 
 def test_hudson_url(mock_profile):
     assert (
-        sml.config.hudson_url()
-        == "protocol://hudson.services.subdomain.sherlockml.net"
+        faculty_cli.config.hudson_url()
+        == "protocol://hudson.services.subdomain.my.faculty.ai"
     )
 
 
 def test_galleon_url(mock_profile):
     assert (
-        sml.config.galleon_url()
-        == "protocol://galleon.services.subdomain.sherlockml.net"
+        faculty_cli.config.galleon_url()
+        == "protocol://galleon.services.subdomain.my.faculty.ai"
     )
 
 
 def test_baskerville_url(mock_profile):
     assert (
-        sml.config.baskerville_url()
-        == "protocol://baskerville.services.subdomain.sherlockml.net"
+        faculty_cli.config.baskerville_url()
+        == "protocol://baskerville.services.subdomain.my.faculty.ai"
     )

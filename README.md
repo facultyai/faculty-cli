@@ -1,3 +1,3 @@
-# sml
+# Faculty CLI
 
-`sml` is the command line interface to [SherlockML](https://sherlockml.com).
+`faculty` is the command line interface to the [Faculty platform](https://sherlockml.com). # TODO change

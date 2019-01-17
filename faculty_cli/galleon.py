@@ -1,6 +1,6 @@
 """Interact with Galleon."""
 
-# Copyright 2016-2018 ASI Data Science
+# Copyright 2016-2019 Faculty Data Science
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,18 +16,18 @@
 
 import dateutil.parser
 
-import sml.client
-import sml.config
+import faculty_cli.client
+import faculty_cli.config
 
 
-class GalleonError(sml.client.SherlockMLServiceError):
+class GalleonError(faculty_cli.client.FacultyServiceError):
     """Exception for errors interacting with Galleon."""
 
     pass
 
 
 class Server(object):
-    """A SherlockML server."""
+    """A Faculty platform server."""
 
     # pylint: disable=too-few-public-methods
 
@@ -157,14 +157,14 @@ class Service(object):
         )
 
 
-class Galleon(sml.client.SherlockMLService):
+class Galleon(faculty_cli.client.FacultyService):
     """A Galleon client."""
 
     def __init__(self):
-        super(Galleon, self).__init__(sml.config.galleon_url())
+        super(Galleon, self).__init__(faculty_cli.config.galleon_url())
 
     def get_all_servers(self):
-        """List all SherlockML servers known to Galleon.
+        """List all Faculty platform servers known to Galleon.
 
         This method requires administrative privileges not available to normal
         users.
@@ -198,7 +198,7 @@ class Galleon(sml.client.SherlockMLService):
         type_version=None,
         environment_ids=None,
     ):
-        """Create a new SherlockML server."""
+        """Create a new Faculty platform server."""
 
         if machine_type == "custom":
             if milli_cpus is None or memory_mb is None:

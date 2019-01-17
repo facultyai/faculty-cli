@@ -1,6 +1,6 @@
-"""Module version information."""
+"""The command line interface to the Faculty platform."""
 
-# Copyright 2016-2018 ASI Data Science
+# Copyright 2016-2019 Faculty Data Science
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,20 +13,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import platform
-from pkg_resources import get_distribution, DistributionNotFound
-
-
-try:
-    __version__ = get_distribution("sml").version
-except DistributionNotFound:
-    # package is not installed
-    pass
-
-
-def user_agent():
-    """Return user agent string."""
-    return "sml/{} (Python {}, {})".format(
-        __version__, platform.python_version(), platform.platform()
-    )

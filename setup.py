@@ -1,6 +1,6 @@
-"""Setup module for sml."""
+"""Setup module for the faculty CLI."""
 
-# Copyright 2016-2018 ASI Data Science
+# Copyright 2016-2019 Faculty Data Science
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,12 +33,12 @@ def read_long_description():
 
 setup(
     name="faculty-cli",
-    description="The command line interface to SherlockML",
+    description="The command line interface to the Faculty platform",
     long_description=read_long_description(),
     long_description_content_type="text/markdown",
-    url="https://sherlockml.com",
-    author="ASI Data Science",
-    author_email="engineering@asidatascience.com",
+    url="https://sherlockml.com", # TODO change
+    author="Faculty Data Science",
+    author_email="engineering@asidatascience.com", # TODO change
     license="Apache Software License",
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -61,7 +61,7 @@ setup(
         "requests",
         "six",
         "tabulate",
-        "sherlockml>=0.18.2",
+        "faculty>=0.18.2",
     ],
-    entry_points={"console_scripts": ["sml=sml.cli:cli"]},
+    entry_points={"console_scripts": ["faculty=faculty_cli.cli:cli"]},
 )

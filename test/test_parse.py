@@ -1,6 +1,6 @@
 import pytest
 
-from sml.parse import (
+from faculty_cli.parse import (
     parse_parameter_values,
     _escape_split,
     parse_run_identifier,

@@ -1,6 +1,6 @@
 """Configuration helpers."""
 
-# Copyright 2016-2018 ASI Data Science
+# Copyright 2016-2019 Faculty Data Science
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,33 +18,19 @@
 import os
 
 import click
-import sherlockml.config
+import faculty.config
 
 
 _PROFILE_CACHE = None
-
-
-def _profile_name_from_sherlockml_env():
-    profile_name = os.getenv("SHERLOCKML_ENV")
-    if profile_name is not None:
-        click.secho(
-            "SHERLOCKML_ENV is deprecated and will be removed in a future "
-            "version. Use SHERLOCKML_PROFILE to select the credentials you "
-            "wish to use instead.",
-            err=True,
-            fg="yellow",
-        )
-    return profile_name
-
 
 def get_profile():
     global _PROFILE_CACHE
     if _PROFILE_CACHE is None:
         profile_name = (
-            os.getenv("SHERLOCKML_PROFILE")
-            or _profile_name_from_sherlockml_env()
+            os.getenv("FACULTY_PROFILE")
+            or os.getenv("SHERLOCKML_PROFILE")
         )
-        _PROFILE_CACHE = sherlockml.config.resolve_profile(
+        _PROFILE_CACHE = faculty.config.resolve_profile(
             profile_name=profile_name
         )
     return _PROFILE_CACHE

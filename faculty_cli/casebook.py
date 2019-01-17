@@ -1,6 +1,6 @@
 """Interact with Casebook."""
 
-# Copyright 2016-2018 ASI Data Science
+# Copyright 2016-2019 Faculty Data Science
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sml.client
-import sml.config
+import faculty_cli.client
+import faculty_cli.config
 
 
 class Project(object):
-    """A SherlockML project."""
+    """A Faculty platform project."""
 
     # pylint: disable=too-few-public-methods
 
@@ -41,11 +41,11 @@ class Project(object):
         )
 
 
-class Casebook(sml.client.SherlockMLService):
+class Casebook(faculty_cli.client.FacultyService):
     """A Casebook client."""
 
     def __init__(self):
-        super(Casebook, self).__init__(sml.config.casebook_url())
+        super(Casebook, self).__init__(faculty_cli.config.casebook_url())
 
     def get_projects(self, user_id):
         """List projects accessible by the given user."""
@@ -56,7 +56,7 @@ class Casebook(sml.client.SherlockMLService):
         """List projects with a given name accessible by the given user."""
         try:
             resp = self._get("/project/{}/{}".format(user_id, project_name))
-        except sml.client.SherlockMLServiceError:
+        except faculty_cli.client.FacultyServiceError:
             projects = self.get_projects(user_id)
             matching_projects = [p for p in projects if p.name == project_name]
             if len(matching_projects) == 1:

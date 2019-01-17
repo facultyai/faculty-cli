@@ -1,6 +1,6 @@
-"""Authenticate with SherlockML."""
+"""Authenticate with the Faculty platform."""
 
-# Copyright 2016-2018 ASI Data Science
+# Copyright 2016-2019 Faculty Data Science
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import uuid
 
 import requests
 
-import sml.config
-import sml.version
+import faculty_cli.config
+import faculty_cli.version
 
 
 class AuthenticationError(Exception):
@@ -38,7 +38,7 @@ def _token_cache_path():
     if not xdg_cache_dir:
         xdg_cache_dir = os.path.expanduser("~/.cache")
 
-    return os.path.join(xdg_cache_dir, "sherlockml", "token-cache.json")
+    return os.path.join(xdg_cache_dir, "sherlockml", "token-cache.json") # TODO Change?
 
 
 def _raise_on_hudson_error(response, valid_status_codes=None):
@@ -55,14 +55,14 @@ def _raise_on_hudson_error(response, valid_status_codes=None):
             error = ""
             error_description = ""
         raise AuthenticationError(
-            "Failed to authenticate with SherlockML: {} {}".format(
+            "Failed to authenticate with the Faculty platform: {} {}".format(
                 error, error_description
             )
         )
 
 
 class TokenCache(object):
-    """Disk-persisted cache for SherlockML access tokens."""
+    """Disk-persisted cache for Faculty platform access tokens."""
 
     def __init__(self):
         self._cache_path = _token_cache_path()
@@ -110,7 +110,7 @@ class TokenCache(object):
 
 
 class Session(object):
-    """Session with the SherlockML authentication service."""
+    """Session with the Faculty platform authentication service."""
 
     def __init__(self, url, profile):
         self._session = requests.Session()
@@ -153,7 +153,7 @@ class Session(object):
 
     def _get_account(self):
         url = self.url + "/authenticate"
-        headers = {"User-Agent": sml.version.user_agent()}
+        headers = {"User-Agent": faculty_cli.version.user_agent()}
         headers.update(self.auth_headers())
         resp = self._session.get(url, headers=headers)
         _raise_on_hudson_error(resp)
@@ -179,8 +179,8 @@ _hudson_session = None
 def _get_session():
     global _hudson_session
     if _hudson_session is None:
-        profile = sml.config.get_profile()
-        url = sml.config.hudson_url()
+        profile = faculty_cli.config.get_profile()
+        url = faculty_cli.config.hudson_url()
         _hudson_session = Session(url, profile)
     return _hudson_session
 
@@ -215,6 +215,6 @@ def credentials_valid(profile):
     session = Session(url, profile)
     try:
         session.token
-    except sml.auth.AuthenticationError:
+    except faculty_cli.auth.AuthenticationError:
         return False
     return True

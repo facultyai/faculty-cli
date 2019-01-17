@@ -1,6 +1,6 @@
 """Interact with Baskerville."""
 
-# Copyright 2016-2018 ASI Data Science
+# Copyright 2016-2019 Faculty Data Science
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,18 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sml.client
-import sml.config
+import faculty_cli.client
+import faculty_cli.config
 
 
-class BaskervilleError(sml.client.SherlockMLServiceError):
+class BaskervilleError(faculty_cli.client.FacultyServiceError):
     """Exception for errors interacting with Baskerville."""
 
     pass
 
 
 class ServerEnvironment(object):
-    """A SherlockML server environment."""
+    """A Faculty platform server environment."""
 
     # pylint: disable=too-few-public-methods
 
@@ -53,11 +53,11 @@ class ServerEnvironment(object):
         )
 
 
-class Baskerville(sml.client.SherlockMLService):
+class Baskerville(faculty_cli.client.FacultyService):
     """A Baskerville client."""
 
     def __init__(self):
-        super(Baskerville, self).__init__(sml.config.baskerville_url())
+        super(Baskerville, self).__init__(faculty_cli.config.baskerville_url())
 
     def get_environments(self, project_id, name=None):
         """List environment in the given project."""
