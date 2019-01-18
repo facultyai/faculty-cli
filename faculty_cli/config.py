@@ -27,13 +27,7 @@ _PROFILE_CACHE = None
 def get_profile():
     global _PROFILE_CACHE
     if _PROFILE_CACHE is None:
-        profile_name = (
-            os.getenv("FACULTY_PROFILE")
-            or os.getenv("SHERLOCKML_PROFILE")
-        )
-        _PROFILE_CACHE = faculty.config.resolve_profile(
-            profile_name=profile_name
-        )
+        _PROFILE_CACHE = faculty.config.resolve_profile()
     return _PROFILE_CACHE
 
 
