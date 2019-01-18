@@ -1,4 +1,4 @@
-"""Prompt the user to update faculty CLI"""
+"""Prompt the user to update the Faculty CLI"""
 
 # Copyright 2016-2019 ASI Data Science
 #

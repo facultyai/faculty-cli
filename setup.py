@@ -1,4 +1,4 @@
-"""Setup module for the faculty CLI."""
+"""Setup module for the Faculty CLI."""
 
 # Copyright 2016-2019 ASI Data Science
 #
@@ -33,7 +33,7 @@ def read_long_description():
 
 setup(
     name="faculty-cli",
-    description="The command line interface to the Faculty platform",
+    description="The command line interface to Faculty",
     long_description=read_long_description(),
     long_description_content_type="text/markdown",
     url="https://sherlockml.com",
