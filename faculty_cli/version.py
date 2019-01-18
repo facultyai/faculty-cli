@@ -26,6 +26,6 @@ except DistributionNotFound:
 
 def user_agent():
     """Return user agent string."""
-    return "faculty/{} (Python {}, {})".format(
+    return "faculty-cli/{} (Python {}, {})".format(
         __version__, platform.python_version(), platform.platform()
     )
