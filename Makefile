@@ -11,4 +11,3 @@ clean:
 lint:
 	python -m compileall faculty_cli
 	flake8 faculty_cli
-	mypy faculty_cli || true
