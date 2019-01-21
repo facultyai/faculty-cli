@@ -75,7 +75,9 @@ def _print_and_exit(msg, code):
 
 def _get_pypi_versions():
     """List releases available from PyPI."""
-    response = requests.get("https://pypi.org/pypi/faculty-cli/json", timeout=1)
+    response = requests.get(
+        "https://pypi.org/pypi/faculty-cli/json", timeout=1
+    )
     versions = response.json()["releases"].keys()
     return [StrictVersion(v) for v in versions]
 
@@ -84,7 +86,7 @@ def _populate_creds_file():
     """Prompt user for client ID and secret and save them."""
     while True:
         domain = click.prompt(
-            "Domain", default="services.cloud.my.faculty.ai", err=True 
+            "Domain", default="services.cloud.my.faculty.ai", err=True
         )
         client_id = click.prompt("Client ID", err=True).strip()
         client_secret = click.prompt("Client secret", err=True).strip()

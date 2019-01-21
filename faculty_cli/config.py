@@ -24,6 +24,7 @@ import faculty.config
 
 _PROFILE_CACHE = None
 
+
 def get_profile():
     global _PROFILE_CACHE
     if _PROFILE_CACHE is None:
