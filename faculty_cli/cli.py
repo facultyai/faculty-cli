@@ -86,14 +86,14 @@ def _populate_creds_file():
     """Prompt user for client ID and secret and save them."""
     while True:
         domain = click.prompt(
-            "Domain", default="services.cloud.my.faculty.ai", err=True
+            "Domain", default=faculty.config.DEFAULT_DOMAIN, err=True
         )
         client_id = click.prompt("Client ID", err=True).strip()
         client_secret = click.prompt("Client secret", err=True).strip()
 
         profile = faculty.config.Profile(
             domain=domain,
-            protocol="https",
+            protocol=faculty.config.DEFAULT_PROTOCOL,
             client_id=client_id,
             client_secret=client_secret,
         )
@@ -105,15 +105,18 @@ def _populate_creds_file():
 
     credentials = textwrap.dedent(
         """\
-        [default]
+        [{profile}]
+        domain = {domain}
         client_id = {client_id}
         client_secret = {client_secret}
-        domain = {domain}
         """.format(
-            client_id=client_id, client_secret=client_secret, domain=domain
+            profile=faculty.config.DEFAULT_PROFILE,
+            client_id=client_id,
+            client_secret=client_secret,
+            domain=domain,
         )
     )
-    credentials_file = faculty.config.default_credentials_path()
+    credentials_file = faculty.config.resolve_credentials_path()
     try:
         os.makedirs(os.path.dirname(credentials_file))
     except OSError:
@@ -128,7 +131,7 @@ def _populate_creds_file():
 
 def _check_creds_file_perms():
     """Check the permissions of the credentials file are correct."""
-    credentials_file = faculty.config.default_credentials_path()
+    credentials_file = faculty.config.resolve_credentials_path()
     if oct(os.stat(credentials_file).st_mode & 0o777)[-2:] != "00":
         msg = textwrap.dedent(
             """\
@@ -144,7 +147,7 @@ def _check_creds_file_perms():
 
 def _ensure_creds_file_present():
     """Ensure the user's credentials file is present."""
-    credentials_file = faculty.config.default_credentials_path()
+    credentials_file = faculty.config.resolve_credentials_path()
     try:
         open(credentials_file)
     except IOError:
@@ -359,7 +362,7 @@ def version():
 @cli.command()
 def login():
     """Write Faculty credentials to file."""
-    credentials_file = faculty.config.default_credentials_path()
+    credentials_file = faculty.config.resolve_credentials_path()
     if os.path.exists(credentials_file):
         if not click.confirm("Overwrite existing credentials file?"):
             return
