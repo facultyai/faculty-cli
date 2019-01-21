@@ -150,7 +150,7 @@ def _ensure_creds_file_present():
     except IOError:
         msg = textwrap.dedent(
             """\
-        It looks like this is the first time you've used the Faculty CLI on 
+        It looks like this is the first time you've used the Faculty CLI on
         this computer, so you must enter your Faculty credentials. They'll be
         saved so you don't have to enter them again.
         """
