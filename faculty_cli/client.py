@@ -1,6 +1,6 @@
-"""Interact with a SherlockML service."""
+"""Interact with a Faculty service."""
 
-# Copyright 2016-2018 ASI Data Science
+# Copyright 2016-2019 ASI Data Science
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,15 +18,16 @@ import json
 from contextlib import contextmanager
 
 import requests
-import sml.auth
-import sml.version
+
+import faculty_cli.auth
+import faculty_cli.version
 
 
-class SherlockMLServiceError(Exception):
-    """Exception for errors interacting with a SherlockML service."""
+class FacultyServiceError(Exception):
+    """Exception for errors interacting with a Faculty service."""
 
     def __init__(self, message, status_code=None):
-        super(SherlockMLServiceError, self).__init__(message)
+        super(FacultyServiceError, self).__init__(message)
         self.status_code = status_code
 
 
@@ -64,8 +65,8 @@ class ServerSentEventMessage(object):
         return cls(id_, event, data)
 
 
-class SherlockMLService(object):
-    """A client for interacting with a SherlockML service."""
+class FacultyService(object):
+    """A client for interacting with a Faculty service."""
 
     def __init__(self, url, cookie_auth=False):
         self._session = requests.Session()
@@ -74,16 +75,16 @@ class SherlockMLService(object):
 
     @property
     def _headers(self):
-        headers = {"User-Agent": sml.version.user_agent()}
+        headers = {"User-Agent": faculty_cli.version.user_agent()}
         if not self.cookie_auth:
-            headers.update(sml.auth.auth_headers())
+            headers.update(faculty_cli.auth.auth_headers())
         return headers
 
     @property
     def _cookies(self):
         cookies = {}
         if self.cookie_auth:
-            cookies["token"] = sml.auth.token()
+            cookies["token"] = faculty_cli.auth.token()
         return cookies
 
     def _check_response(self, response):
@@ -94,7 +95,7 @@ class SherlockMLService(object):
                 msg = response.json().get("error", "")
             except Exception:  # pylint: disable=broad-except
                 msg = "error from the server"
-            raise SherlockMLServiceError(msg, response.status_code)
+            raise FacultyServiceError(msg, response.status_code)
 
     def _get(self, endpoint, params=None, stream=False):
         url = "{}{}".format(self.url, endpoint)

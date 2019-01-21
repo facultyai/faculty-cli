@@ -1,6 +1,6 @@
-"""Prompt the user to update sml"""
+"""Prompt the user to update the Faculty CLI"""
 
-# Copyright 2016-2018 ASI Data Science
+# Copyright 2016-2019 ASI Data Science
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ from distutils.version import StrictVersion
 
 import click
 import requests
-import sml.version
+import faculty_cli.version
 
 
 def _ensure_parent_exists(path):
@@ -47,23 +47,25 @@ def _last_update_path():
     if not xdg_cache_dir:
         xdg_cache_dir = os.path.expanduser("~/.cache")
 
-    return os.path.join(xdg_cache_dir, "sherlockml", "last_update_check")
+    return os.path.join(xdg_cache_dir, "faculty", "last_update_check")
 
 
 def _get_pypi_versions():
-    response = requests.get("https://pypi.python.org/pypi/sml/json", timeout=1)
+    response = requests.get(
+        "https://pypi.org/pypi/faculty-cli/json", timeout=1
+    )
     versions = response.json()["releases"].keys()
     return [StrictVersion(v) for v in versions]
 
 
 def _check_for_new_release():
-    current = StrictVersion(sml.version.__version__)
+    current = StrictVersion(faculty_cli.version.__version__)
     latest = max(_get_pypi_versions())
     if current < latest:
         template = (
-            "You are using sml version {}, however version {} is "
+            "You are using faculty-cli version {}, however version {} is "
             "available.\n"
-            "You should upgrade with 'pip install --upgrade sml'."
+            "You should upgrade with 'pip install --upgrade faculty-cli'."
         )
         click.secho(template.format(current, latest), err=True, fg="yellow")
     _set_mtime(_last_update_path())
