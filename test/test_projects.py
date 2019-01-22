@@ -31,7 +31,7 @@ def test_list_projects(
     result = runner.invoke(cli, ["project", "list"])
 
     assert result.exit_code == 0
-    assert result.output ==  PROJECT.name + "\n"
+    assert result.output == PROJECT.name + "\n"
 
     ProjectClient._get.assert_called_once_with(
         "/user/{}".format(USER_ID), schema_mock.return_value
@@ -50,10 +50,7 @@ def test_list_projects_verbose(
     tpl = "Project Name    ID\n{}    {}\n"
 
     assert result.exit_code == 0
-    assert (
-        result.output
-        == tpl.format(PROJECT.name, PROJECT.id)
-    )
+    assert result.output == tpl.format(PROJECT.name, PROJECT.id)
 
     ProjectClient._get.assert_called_once_with(
         "/user/{}".format(USER_ID), schema_mock.return_value
