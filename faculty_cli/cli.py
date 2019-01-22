@@ -369,14 +369,20 @@ def login():
     _populate_creds_file()
 
 
-@cli.command()
+@cli.group()
+def project():
+    """Manipulate Faculty projects."""
+    pass
+
+
+@project.command(name="list")
 @click.option(
     "-v",
     "--verbose",
     is_flag=True,
     help="Print extra information about projects.",
 )
-def projects(verbose):
+def list_projects(verbose):
     """List accessible Faculty projects."""
     _check_credentials()
     client = faculty_cli.casebook.Casebook()
