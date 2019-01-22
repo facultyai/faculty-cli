@@ -17,12 +17,16 @@ def mock_check_credentials(mocker):
 
 
 @pytest.fixture
-def mock_profile(mocker):
+def mock_user_id(mocker):
     mocker.patch("faculty_cli.auth.user_id", return_value=USER_ID)
 
 
 def test_list_projects(
-    mocker, mock_update_check, mock_check_credentials, mock_profile
+    mocker,
+    mock_update_check,
+    mock_check_credentials,
+    mock_profile,
+    mock_user_id,
 ):
     runner = CliRunner()
     schema_mock = mocker.patch("faculty.clients.project.ProjectSchema")
@@ -39,7 +43,11 @@ def test_list_projects(
 
 
 def test_list_projects_verbose(
-    mocker, mock_update_check, mock_check_credentials, mock_profile
+    mocker,
+    mock_update_check,
+    mock_check_credentials,
+    mock_profile,
+    mock_user_id,
 ):
     runner = CliRunner()
     schema_mock = mocker.patch("faculty.clients.project.ProjectSchema")
