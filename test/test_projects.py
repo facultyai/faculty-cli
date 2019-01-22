@@ -1,24 +1,24 @@
 import pytest
 from click.testing import CliRunner
 
-from faculty_cli.cli.cli import cli
+from faculty_cli.cli import cli
 from faculty.clients.project import ProjectClient
 from test.fixtures import PROJECT, USER_ID
 
 
 @pytest.fixture
 def mock_update_check(mocker):
-    mocker.patch("faculty.cli.update.check_for_new_release")
+    mocker.patch("faculty_cli.update.check_for_new_release")
 
 
 @pytest.fixture
 def mock_check_credentials(mocker):
-    mocker.patch("faculty.cli.cli._check_credentials")
+    mocker.patch("faculty_cli.cli._check_credentials")
 
 
 @pytest.fixture
 def mock_profile(mocker):
-    mocker.patch("faculty.cli.auth.user_id", return_value=USER_ID)
+    mocker.patch("faculty_cli.auth.user_id", return_value=USER_ID)
 
 
 def test_list_projects(
@@ -28,10 +28,10 @@ def test_list_projects(
     schema_mock = mocker.patch("faculty.clients.project.ProjectSchema")
     mocker.patch.object(ProjectClient, "_get", return_value=[PROJECT])
 
-    result = runner.invoke(cli, ["projects"])
+    result = runner.invoke(cli, ["project", "list"])
 
     assert result.exit_code == 0
-    assert result.output == f"{PROJECT.name}\n"
+    assert result.output ==  PROJECT.name + "\n"
 
     ProjectClient._get.assert_called_once_with(
         "/user/{}".format(USER_ID), schema_mock.return_value
@@ -45,12 +45,14 @@ def test_list_projects_verbose(
     schema_mock = mocker.patch("faculty.clients.project.ProjectSchema")
     mocker.patch.object(ProjectClient, "_get", return_value=[PROJECT])
 
-    result = runner.invoke(cli, ["projects", "-v"])
+    result = runner.invoke(cli, ["project", "list", "-v"])
+
+    tpl = "Project Name    ID\n{}    {}\n"
 
     assert result.exit_code == 0
     assert (
         result.output
-        == f"Project Name    ID\n{PROJECT.name}    {PROJECT.id}\n"
+        == tpl.format(PROJECT.name, PROJECT.id)
     )
 
     ProjectClient._get.assert_called_once_with(
