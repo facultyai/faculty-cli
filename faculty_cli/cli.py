@@ -172,9 +172,17 @@ def _resolve_project(project):
     try:
         project_id = uuid.UUID(project)
     except ValueError:
-        user_id = faculty_cli.auth.user_id()
-        client = faculty.client("project")
-        project_id = client.get_by_owner_and_name(user_id, project).id
+        account_client = faculty.client("account")
+        user_id = account_client.authenticated_user_id()
+
+        project_client = faculty.client("project")
+        projects = project_client.list_accessible_by_user(user_id)
+        matching_projects = [p for p in projects if p.name == project]
+        if len(matching_projects) == 1:
+            project_id = matching_projects[0].id
+        else:
+            if not matching_projects:
+                _print_and_exit("Project {} not found.".format(project), 1)
     return project_id
 
 
