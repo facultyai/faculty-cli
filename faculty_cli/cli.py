@@ -58,7 +58,7 @@ SSH_OPTIONS = [
 
 
 class AmbiguousNameError(Exception):
-    """Exception when name matches multiple servers."""
+    """Exception when name matches multiple servers or projects."""
 
     pass
 
@@ -182,7 +182,13 @@ def _resolve_project(project):
             project_id = matching_projects[0].id
         else:
             if not matching_projects:
-                _print_and_exit("Project {} not found.".format(project), 1)
+                tpl = 'no project of name "{}" found'
+            else:
+                tpl = (
+                    'more than one project of name "{}", please select by '
+                    "project ID instead"
+                )
+            raise AmbiguousNameError(tpl.format(project))
     return project_id
 
 
