@@ -53,8 +53,7 @@ setup(
     keywords="data science platform",
     packages=find_packages(),
     use_scm_version={"version_scheme": "post-release"},
-    setup_requires=["setuptools_scm", "pytest-runner"],
-    tests_require=["pytest", "pytest-mock"],
+    setup_requires=["setuptools_scm"],
     install_requires=[
         "click",
         "python-dateutil",
