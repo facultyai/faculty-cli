@@ -34,8 +34,6 @@ import click
 import requests
 import faculty
 import faculty.config
-from faculty.clients.job import JobClient
-from faculty.clients.log import LogClient
 from faculty.clients.base import NotFound
 from tabulate import tabulate
 
@@ -225,7 +223,7 @@ def _resolve_server(project, server=None, ensure_running=True):
 def _job_by_name(project_id, job_name):
     """Resolve a project ID and job name to a job ID."""
 
-    client = JobClient(faculty_cli.config.get_profile())
+    client = faculty.client("job")
     jobs = client.list(project_id)
     matching_jobs = [job for job in jobs if job.metadata.name == job_name]
     if len(matching_jobs) == 1:
@@ -843,7 +841,7 @@ def list_jobs(project, verbose):
 
     project_id = _resolve_project(project)
 
-    client = JobClient(faculty_cli.config.get_profile())
+    client = faculty.client("job")
     jobs = client.list(project_id)
     if verbose:
         if not jobs:
@@ -872,7 +870,7 @@ def list_job_runs(project, job, verbose):
 
     project_id, job_id = _resolve_job(project, job)
 
-    client = JobClient(faculty_cli.config.get_profile())
+    client = faculty.client("job")
 
     def list_runs():
         list_runs_result = client.list_runs(project_id, job_id)
@@ -966,7 +964,7 @@ def run_job(project, job, parameter_values, num_subruns):
 
     project_id, job_id = _resolve_job(project, job)
 
-    client = JobClient(faculty_cli.config.get_profile())
+    client = faculty.client("job")
     client.create_run(project_id, job_id, parameter_values)
 
     if len(parameter_values) == 1:
@@ -992,7 +990,7 @@ def job_run_logs(project, job, run):
 
     project_id, job_id = _resolve_job(project, job)
 
-    job_client = JobClient(faculty_cli.config.get_profile())
+    job_client = faculty.client("job")
     run_details = job_client.get_run(project_id, job_id, run.run_number)
     if run.subrun_number is not None:
         subrun_number = run.subrun_number
@@ -1011,7 +1009,7 @@ def job_run_logs(project, job, run):
         project_id, job_id, run.run_number, subrun_number
     )
 
-    log_client = LogClient(faculty_cli.config.get_profile())
+    log_client = faculty.client("log")
 
     for env_step_exec in subrun_details.environment_step_executions:
         env_name = env_step_exec.environment_name
