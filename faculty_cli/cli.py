@@ -39,7 +39,6 @@ from tabulate import tabulate
 
 import faculty_cli.auth
 import faculty_cli.config
-import faculty_cli.baskerville
 import faculty_cli.client
 import faculty_cli.galleon
 import faculty_cli.hound
@@ -250,10 +249,11 @@ def _resolve_job(project, job):
 
 
 def _environment_by_name(project_id, environment_name):
-    client = faculty_cli.baskerville.Baskerville()
-    matching_environments = client.get_environments(
-        project_id, environment_name
-    )
+    client = faculty.client("environment")
+    environments = client.list(project_id)
+    matching_environments = [
+        e for e in environments if e.name == environment_name
+    ]
     if len(matching_environments) == 1:
         return matching_environments[0]
     else:
@@ -272,7 +272,7 @@ def _resolve_environment(project_id, environment):
     try:
         environment_id = uuid.UUID(environment)
     except ValueError:
-        environment_id = _environment_by_name(project_id, environment).id_
+        environment_id = _environment_by_name(project_id, environment).id
     return environment_id
 
 
@@ -707,16 +707,16 @@ def environment():
 )
 def list_environments(project, verbose):
     """List your environments."""
-    client = faculty_cli.baskerville.Baskerville()
+    client = faculty.client("environment")
     project_id = _resolve_project(project)
-    environments = client.get_environments(project_id)
+    environments = client.list(project_id)
     if verbose:
         if not environments:
             click.echo("No environments.")
         else:
             click.echo(
                 tabulate(
-                    [(e.name, e.id_) for e in environments],
+                    [(e.name, e.id) for e in environments],
                     ("Environment Name", "ID"),
                     tablefmt="plain",
                 )
