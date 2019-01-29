@@ -640,10 +640,9 @@ def new(
 @click.argument("server")
 def terminate(project, server):
     """Terminate a Faculty server."""
-    _check_credentials()
     _, server_id = _resolve_server(project, server, ensure_running=False)
-    client = faculty_cli.galleon.Galleon()
-    client.terminate_server(server_id)
+    client = faculty.client("server")
+    client.delete(server_id)
 
 
 @server.command(name="instance-types")
