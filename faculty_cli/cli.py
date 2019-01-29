@@ -227,12 +227,12 @@ def _server_by_name(project_id, server_name, status=None):
 
 def _any_server(project_id, status=None):
     """Get any running server from project."""
-    client = faculty_cli.galleon.Galleon()
-    servers_ = client.get_servers(project_id, status=status)
+    client = faculty.client("server")
+    servers_ = [s for s in client.list(project_id) if s.status == status]
     if not servers_:
         adjective = "available" if status is None else status
         _print_and_exit("No {} server in project.".format(adjective), 78)
-    return servers_[0].id_
+    return servers_[0].id
 
 
 def _resolve_server(project, server=None, ensure_running=True):
@@ -242,7 +242,7 @@ def _resolve_server(project, server=None, ensure_running=True):
     try:
         server_id = uuid.UUID(server)
     except ValueError:
-        server_id = _server_by_name(project_id, server, status).id_
+        server_id = _server_by_name(project_id, server, status).id
     except TypeError:
         server_id = _any_server(project_id, status)
     return project_id, server_id
