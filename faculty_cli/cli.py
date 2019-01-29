@@ -35,7 +35,11 @@ import faculty
 import faculty.config
 import requests
 from faculty.clients.base import NotFound
-from faculty.clients.server import ServerStatus, SharedServerResources
+from faculty.clients.server import (
+    DedicatedServerResources,
+    ServerStatus,
+    SharedServerResources,
+)
 from tabulate import tabulate
 
 import faculty_cli.auth
@@ -598,38 +602,29 @@ def new(
 ):
     """Create a new Faculty server."""
     # pylint: disable=too-many-arguments
-    _check_credentials()
     project_id = _resolve_project(project)
     environment_ids = [
         _resolve_environment(project_id, env) for env in environments
     ]
 
     if machine_type is None or machine_type == "custom":
-        machine_type = "custom"
-        milli_cpus = int(cores * 1000)
-        memory_mb = int(memory * 1000)
+        resources = SharedServerResources(
+            milli_cpus=int(cores * 1000), memory_mb=int(memory * 1000)
+        )
 
     elif machine_type is not None and machine_type != "custom":
-        milli_cpus = None
-        memory_mb = None
+        resources = DedicatedServerResources(node_type=machine_type)
 
-    client = faculty_cli.galleon.Galleon()
-    server_id = client.create_server(
-        project_id,
-        type_,
-        machine_type,
-        milli_cpus,
-        memory_mb,
-        name,
-        version,
-        environment_ids,
+    client = faculty.client("server")
+    server_id = client.create(
+        project_id, type_, resources, name, version, environment_ids
     )
     click.echo("Creating server {} in project {}".format(server_id, project))
     if wait:
         while True:
             servers = [
-                server.id_
-                for server in client.get_servers(
+                server.id
+                for server in _get_servers(
                     project_id, status=ServerStatus.RUNNING
                 )
             ]
