@@ -224,10 +224,10 @@ def _server_by_name(project_id, server_name, status=None):
 
 
 def _any_server(project_id, status=None):
-    """Get any running server from project."""
+    """Get any server from project."""
     servers = _get_servers(project_id, status=status)
     if not servers:
-        adjective = "available" if status is None else status
+        adjective = "available" if status is None else status.value
         _print_and_exit("No {} server in project.".format(adjective), 78)
     return servers[0].id
 
