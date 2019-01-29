@@ -523,15 +523,17 @@ def list_servers(project, all, verbose):
 def open_(project, server):
     """Open a Faculty server in your browser."""
     project_id, server_id = _resolve_server(project, server)
-    client = faculty_cli.galleon.Galleon()
-    server = client.get_server(project_id, server_id)
+
+    client = faculty.client("server")
+    server = client.get(project_id, server_id)
+
     https_services = [
         service for service in server.services if service.name == "https"
     ]
     if not https_services:
         _print_and_exit(
             "Server {} is not running an application that "
-            "can be opened in a web browser".format(server.name)
+            "can be opened in a web browser".format(server.name), 1
         )
     [https_service] = https_services
     url = "{}://{}".format(https_service.scheme, https_service.host)
