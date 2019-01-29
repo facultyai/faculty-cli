@@ -35,7 +35,7 @@ import faculty
 import faculty.config
 import requests
 from faculty.clients.base import NotFound
-from faculty.clients.server import ServerStatus
+from faculty.clients.server import ServerStatus, SharedServerResources
 from tabulate import tabulate
 
 import faculty_cli.auth
@@ -485,23 +485,25 @@ def list_servers(project, all, verbose):
             )
             rows = []
             for server in servers:
-                if server.machine_type == "custom":
+                if isinstance(server.resources, SharedServerResources):
                     machine_type = "-"
-                    cpus = "{:.3g}".format(server.milli_cpus / 1000)
-                    memory_gb = "{:.3g}GB".format(server.memory_mb / 1000)
+                    cpus = "{:.3g}".format(server.resources.milli_cpus / 1000)
+                    memory_gb = "{:.3g}GB".format(
+                        server.resources.memory_mb / 1000
+                    )
                 else:
-                    machine_type = server.machine_type
+                    machine_type = server.resources.node_type
                     cpus = "-"
                     memory_gb = "-"
                 rows.append(
                     (
                         server.name,
-                        server.type_,
+                        server.type,
                         machine_type,
                         cpus,
                         memory_gb,
-                        server.status,
-                        server.id_,
+                        server.status.value,
+                        server.id,
                         server.created_at.strftime("%Y-%m-%d %H:%M"),
                     )
                 )
