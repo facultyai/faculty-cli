@@ -533,7 +533,8 @@ def open_(project, server):
     if not https_services:
         _print_and_exit(
             "Server {} is not running an application that "
-            "can be opened in a web browser".format(server.name), 1
+            "can be opened in a web browser".format(server.name),
+            1,
         )
     [https_service] = https_services
     url = "{}://{}".format(https_service.scheme, https_service.host)
