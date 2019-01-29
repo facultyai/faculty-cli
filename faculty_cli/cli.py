@@ -34,7 +34,7 @@ import click
 import faculty
 import faculty.config
 import requests
-from faculty.clients.base import NotFound
+from faculty.clients.base import Forbidden, NotFound, Unauthorized
 from faculty.clients.server import (
     DedicatedServerResources,
     ServerStatus,
@@ -331,13 +331,13 @@ def _save_key_to_file(key):
 
 
 def _get_ssh_details(project_id, server_id):
-    client = faculty_cli.galleon.Galleon()
+    client = faculty.client("server")
     for _ in range(20):
         try:
-            return client.ssh_details(project_id, server_id)
-        except faculty_cli.auth.AuthenticationError as err:
+            return client.get_ssh_details(project_id, server_id)
+        except Forbidden as err:
             _print_and_exit(err, 77)
-        except faculty_cli.client.FacultyServiceError:
+        except NotFound:
             click.echo("Server still starting, waiting 30 seconds")
         time.sleep(30)
     _print_and_exit("Could not connect to server", 69)
