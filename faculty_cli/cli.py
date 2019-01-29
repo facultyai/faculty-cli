@@ -204,15 +204,13 @@ def _resolve_project(project):
 
 def _server_by_name(project_id, server_name, status=None):
     """Resolve a project ID and server name to a server ID."""
-    client = faculty.client("server")
-    servers = client.list(project_id, server_name)
-    matching_servers = [s for s in servers if s.status == status]
+    servers = _get_servers(project_id, server_name, status)
 
-    if len(matching_servers) == 1:
-        return matching_servers[0]
+    if len(servers) == 1:
+        return servers[0]
     else:
         adjective = "available" if status is None else status
-        if not matching_servers:
+        if not servers:
             msg = 'no {} server of name "{}" in this project'.format(
                 adjective, server_name
             )
@@ -227,12 +225,11 @@ def _server_by_name(project_id, server_name, status=None):
 
 def _any_server(project_id, status=None):
     """Get any running server from project."""
-    client = faculty.client("server")
-    servers_ = [s for s in client.list(project_id) if s.status == status]
-    if not servers_:
+    servers = _get_servers(project_id, status=status)
+    if not servers:
         adjective = "available" if status is None else status
         _print_and_exit("No {} server in project.".format(adjective), 78)
-    return servers_[0].id
+    return servers[0].id
 
 
 def _resolve_server(project, server=None, ensure_running=True):
@@ -246,6 +243,15 @@ def _resolve_server(project, server=None, ensure_running=True):
     except TypeError:
         server_id = _any_server(project_id, status)
     return project_id, server_id
+
+
+def _get_servers(project_id, name=None, status=None):
+    """List servers in the given project."""
+    client = faculty.client("server")
+    servers = client.list(project_id, name)
+    if status is not None:
+        servers = [s for s in servers if s.status == status]
+    return servers
 
 
 def _job_by_name(project_id, job_name):
@@ -458,13 +464,13 @@ def server():
 )
 def list_servers(project, all, verbose):
     """List your Faculty servers."""
-    _check_credentials()
-    client = faculty_cli.galleon.Galleon()
-    status_filter = None if all else ServerStatus.RUNNING
     project_id = _resolve_project(project)
-    servers_ = client.get_servers(project_id, status=status_filter)
+
+    status_filter = None if all else ServerStatus.RUNNING
+    servers = _get_servers(project_id, status=status_filter)
+
     if verbose:
-        if not servers_:
+        if not servers:
             click.echo("No servers.")
         else:
             headers = (
@@ -478,7 +484,7 @@ def list_servers(project, all, verbose):
                 "Started",
             )
             rows = []
-            for server in servers_:
+            for server in servers:
                 if server.machine_type == "custom":
                     machine_type = "-"
                     cpus = "{:.3g}".format(server.milli_cpus / 1000)
@@ -501,7 +507,7 @@ def list_servers(project, all, verbose):
                 )
             click.echo(tabulate(rows, headers, tablefmt="plain"))
     else:
-        for server in servers_:
+        for server in servers:
             click.echo(server.name)
 
 
