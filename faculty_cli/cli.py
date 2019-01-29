@@ -31,15 +31,18 @@ import uuid
 from distutils.version import StrictVersion
 
 import click
-import requests
 import faculty
 import faculty.config
+import requests
 from faculty.clients.base import NotFound
+from faculty.clients.server import ServerStatus
 from tabulate import tabulate
 
 import faculty_cli.auth
 import faculty_cli.config
+import faculty_cli.baskerville
 import faculty_cli.client
+import faculty_cli.config
 import faculty_cli.galleon
 import faculty_cli.hound
 import faculty_cli.parse
@@ -201,8 +204,10 @@ def _resolve_project(project):
 
 def _server_by_name(project_id, server_name, status=None):
     """Resolve a project ID and server name to a server ID."""
-    client = faculty_cli.galleon.Galleon()
-    matching_servers = client.get_servers(project_id, server_name, status)
+    client = faculty.client("server")
+    servers = client.list(project_id, server_name)
+    matching_servers = [s for s in servers if s.status == status]
+
     if len(matching_servers) == 1:
         return matching_servers[0]
     else:
@@ -233,7 +238,7 @@ def _any_server(project_id, status=None):
 def _resolve_server(project, server=None, ensure_running=True):
     """Resolve project and server names to project and server IDs."""
     project_id = _resolve_project(project)
-    status = "running" if ensure_running else None
+    status = ServerStatus.RUNNING if ensure_running else None
     try:
         server_id = uuid.UUID(server)
     except ValueError:
@@ -455,7 +460,7 @@ def list_servers(project, all, verbose):
     """List your Faculty servers."""
     _check_credentials()
     client = faculty_cli.galleon.Galleon()
-    status_filter = None if all else "running"
+    status_filter = None if all else ServerStatus.RUNNING
     project_id = _resolve_project(project)
     servers_ = client.get_servers(project_id, status=status_filter)
     if verbose:
@@ -616,7 +621,9 @@ def new(
         while True:
             servers = [
                 server.id_
-                for server in client.get_servers(project_id, status="running")
+                for server in client.get_servers(
+                    project_id, status=ServerStatus.RUNNING
+                )
             ]
             if server_id in servers:
                 break
