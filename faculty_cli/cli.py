@@ -34,7 +34,7 @@ import click
 import faculty
 import faculty.config
 import requests
-from faculty.clients.base import Forbidden, NotFound, Unauthorized
+import faculty.clients.base
 from faculty.clients.server import (
     DedicatedServerResources,
     ServerStatus,
@@ -335,9 +335,9 @@ def _get_ssh_details(project_id, server_id):
     for _ in range(20):
         try:
             return client.get_ssh_details(project_id, server_id)
-        except Forbidden as err:
+        except faculty.clients.base.Forbidden as err:
             _print_and_exit(err, 77)
-        except NotFound:
+        except faculty.clients.base.NotFound:
             click.echo("Server still starting, waiting 30 seconds")
         time.sleep(30)
     _print_and_exit("Could not connect to server", 69)
