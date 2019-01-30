@@ -706,27 +706,21 @@ def shell(project, server, ssh_opts):
 
     $ faculty shell <project> <server> -L 9000:localhost:8888
     """
-    _check_credentials()
 
     project_id, server_id = _resolve_server(project, server)
-    client = faculty_cli.galleon.Galleon()
-    details = client.ssh_details(project_id, server_id)
+    client = faculty.client("server")
+    details = client.get_ssh_details(project_id, server_id)
 
-    hostname = details["hostname"]
-    port = details["port"]
-    username = details["username"]
-    key = details["key"]
-
-    with _save_key_to_file(key) as filename:
+    with _save_key_to_file(details.key) as filename:
         cmd = (
             ["ssh"]
             + SSH_OPTIONS
             + [
                 "-p",
-                str(port),
+                str(details.port),
                 "-i",
                 filename,
-                "{}@{}".format(username, hostname),
+                "{}@{}".format(details.username, details.hostname),
             ]
         )
         cmd += list(ssh_opts)
