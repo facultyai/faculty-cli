@@ -43,11 +43,6 @@ def hudson_url():
     return _url_for_service("hudson")
 
 
-def galleon_url():
-    """Return URL for Galleon."""
-    return _url_for_service("galleon")
-
-
 def baskerville_url():
     """Return URL for Baskerville."""
     return _url_for_service("baskerville")
