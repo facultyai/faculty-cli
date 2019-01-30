@@ -798,6 +798,11 @@ def _get_service(server, name):
     raise RuntimeError("cube has no service called {}".format(name))
 
 
+def _get_hound_url(server):
+    service = _get_service(server, "hound")
+    return "{}://{}:{}".format(service.scheme, service.host, service.port)
+
+
 @environment.command()
 @click.argument("project")
 @click.argument("server")
@@ -808,8 +813,7 @@ def status(project, server):
     server_client = faculty.client("server")
     server = server_client.get(project_id, server_id)
 
-    service = _get_service(server, "hound")
-    hound_url = "{}://{}:{}".format(service.scheme, service.host, service.port)
+    hound_url = _get_hound_url(server)
 
     client = faculty_cli.hound.Hound(hound_url)
     execution = client.latest_environment_execution()
