@@ -1100,16 +1100,12 @@ def put(project, local, remote, server):
 
     project_id, server_id = _resolve_server(project, server)
 
-    client = faculty_cli.galleon.Galleon()
-    details = client.ssh_details(project_id, server_id)
+    client = faculty.client("server")
+    details = client.get_ssh_details(project_id, server_id)
 
     escaped_remote = faculty_cli.shell.quote(remote)
 
-    hostname = details["hostname"]
-    port = details["port"]
-    username = details["username"]
-    key = details["key"]
-    with _save_key_to_file(key) as filename:
+    with _save_key_to_file(details.key) as filename:
         cmd = (
             ["scp"]
             + SSH_OPTIONS
@@ -1117,9 +1113,11 @@ def put(project, local, remote, server):
                 "-i",
                 filename,
                 "-P",
-                str(port),
+                str(details.port),
                 os.path.expanduser(local),
-                u"{}@{}:{}".format(username, hostname, escaped_remote),
+                u"{}@{}:{}".format(
+                    details.username, details.hostname, escaped_remote
+                ),
             ]
         )
         _run_ssh_cmd(cmd)
