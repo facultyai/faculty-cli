@@ -58,14 +58,12 @@ SSH_OPTIONS = [
 
 
 class AmbiguousNameError(Exception):
-    """Exception when name matches multiple servers or projects."""
-
+    """Exception when name matches multiple resources."""
     pass
 
 
 class NameNotFoundError(Exception):
-    """Exception when server or project name is not found."""
-
+    """Exception when a resource name is not found."""
     pass
 
 
