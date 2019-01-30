@@ -44,9 +44,7 @@ from tabulate import tabulate
 
 import faculty_cli.auth
 import faculty_cli.config
-import faculty_cli.baskerville
 import faculty_cli.client
-import faculty_cli.config
 import faculty_cli.hound
 import faculty_cli.parse
 import faculty_cli.shell
