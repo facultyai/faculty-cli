@@ -1232,8 +1232,8 @@ def ls(project, path):
         directory_details_list = client.list(
             project_id=project_id, prefix=relative_path, depth=1
         )
-    except NotFound:
-        _print_and_exit("{}: No such file or directory".format(path), 64)
+    except faculty.clients.base.NotFound:
+        _print_and_exit("{}: No such file or directory".format(path), 66)
 
     try:
         [directory_details] = directory_details_list
