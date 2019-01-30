@@ -791,6 +791,13 @@ def _format_command(command):
     return " ".join(formatted_parts)
 
 
+def _get_service(server, name):
+    for service in server.services:
+        if service.name == name:
+            return service
+    raise RuntimeError("cube has no service called {}".format(name))
+
+
 @environment.command()
 @click.argument("project")
 @click.argument("server")
@@ -798,10 +805,13 @@ def status(project, server):
     """Get the execution status for an environment."""
     project_id, server_id = _resolve_server(project, server)
 
-    galleon_client = faculty_cli.galleon.Galleon()
-    server = galleon_client.get_server(project_id, server_id)
+    server_client = faculty.client("server")
+    server = server_client.get(project_id, server_id)
 
-    client = faculty_cli.hound.Hound(server.hound_url)
+    service = _get_service(server, "hound")
+    hound_url = "{}://{}:{}".format(service.scheme, service.host, service.port)
+
+    client = faculty_cli.hound.Hound(hound_url)
     execution = client.latest_environment_execution()
 
     if execution is None:
