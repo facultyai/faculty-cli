@@ -771,8 +771,8 @@ def apply(project, server, environment):
     project_id, server_id = _resolve_server(project, server)
     environment_id = _resolve_environment(project_id, environment)
 
-    client = faculty_cli.galleon.Galleon()
-    client.apply_environment(server_id, environment_id)
+    client = faculty.client("server")
+    client.apply_environment(environment_id, server_id)
 
     click.echo(
         "Applying environment {} to server {} for project {}".format(
