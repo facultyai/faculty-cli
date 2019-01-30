@@ -1133,16 +1133,12 @@ def get(project, remote, local, server):
 
     project_id, server_id = _resolve_server(project, server)
 
-    client = faculty_cli.galleon.Galleon()
-    details = client.ssh_details(project_id, server_id)
+    client = faculty.client("server")
+    details = client.get_ssh_details(project_id, server_id)
 
     escaped_remote = faculty_cli.shell.quote(remote)
 
-    hostname = details["hostname"]
-    port = details["port"]
-    username = details["username"]
-    key = details["key"]
-    with _save_key_to_file(key) as filename:
+    with _save_key_to_file(details.key) as filename:
         cmd = (
             ["scp"]
             + SSH_OPTIONS
@@ -1150,8 +1146,8 @@ def get(project, remote, local, server):
                 "-i",
                 filename,
                 "-P",
-                str(port),
-                u"{}@{}:{}".format(username, hostname, escaped_remote),
+                str(details.port),
+                u"{}@{}:{}".format(details.username, details.hostname, escaped_remote),
                 os.path.expanduser(local),
             ]
         )
