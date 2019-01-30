@@ -848,10 +848,12 @@ def logs(project, server, step_number):
     """Stream the logs for a server environment application."""
     project_id, server_id = _resolve_server(project, server)
 
-    galleon_client = faculty_cli.galleon.Galleon()
-    server = galleon_client.get_server(project_id, server_id)
+    server_client = faculty.client("server")
+    server = server_client.get(project_id, server_id)
 
-    client = faculty_cli.hound.Hound(server.hound_url)
+    hound_url = _get_hound_url(server)
+
+    client = faculty_cli.hound.Hound(hound_url)
     execution = client.latest_environment_execution()
 
     if execution is None:
