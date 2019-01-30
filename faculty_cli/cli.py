@@ -1147,7 +1147,9 @@ def get(project, remote, local, server):
                 filename,
                 "-P",
                 str(details.port),
-                u"{}@{}:{}".format(details.username, details.hostname, escaped_remote),
+                u"{}@{}:{}".format(
+                    details.username, details.hostname, escaped_remote
+                ),
                 os.path.expanduser(local),
             ]
         )
@@ -1159,25 +1161,24 @@ def _rsync(project, local, remote, server, rsync_opts, up):
 
     project_id, server_id = _resolve_server(project, server)
 
-    client = faculty_cli.galleon.Galleon()
-    details = client.ssh_details(project_id, server_id)
-
-    hostname = details["hostname"]
-    port = details["port"]
-    username = details["username"]
-    key = details["key"]
+    client = faculty.client("server")
+    details = client.get_ssh_details(project_id, server_id)
 
     escaped_remote = faculty_cli.shell.quote(remote)
     if up:
         path_from = local
-        path_to = u"{}@{}:{}".format(username, hostname, escaped_remote)
+        path_to = u"{}@{}:{}".format(
+            details.username, details.hostname, escaped_remote
+        )
     else:
-        path_from = u"{}@{}:{}".format(username, hostname, escaped_remote)
+        path_from = u"{}@{}:{}".format(
+            details.username, details.hostname, escaped_remote
+        )
         path_to = local
 
-    with _save_key_to_file(key) as filename:
+    with _save_key_to_file(details.key) as filename:
         ssh_cmd = "ssh {} -p {} -i {}".format(
-            " ".join(SSH_OPTIONS), port, filename
+            " ".join(SSH_OPTIONS), details.port, filename
         )
 
         rsync_cmd = ["rsync", "-a", "-e", ssh_cmd, path_from, path_to]
