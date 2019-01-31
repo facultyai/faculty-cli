@@ -59,11 +59,13 @@ SSH_OPTIONS = [
 
 class AmbiguousNameError(Exception):
     """Exception when name matches multiple resources."""
+
     pass
 
 
 class NameNotFoundError(Exception):
     """Exception when a resource name is not found."""
+
     pass
 
 
