@@ -58,7 +58,13 @@ SSH_OPTIONS = [
 
 
 class AmbiguousNameError(Exception):
-    """Exception when name matches multiple servers."""
+    """Exception when name matches multiple resources."""
+
+    pass
+
+
+class NameNotFoundError(Exception):
+    """Exception when a resource name is not found."""
 
     pass
 
@@ -172,9 +178,24 @@ def _resolve_project(project):
     try:
         project_id = uuid.UUID(project)
     except ValueError:
-        user_id = faculty_cli.auth.user_id()
-        client = faculty.client("project")
-        project_id = client.get_by_owner_and_name(user_id, project).id
+        account_client = faculty.client("account")
+        user_id = account_client.authenticated_user_id()
+
+        project_client = faculty.client("project")
+        projects = project_client.list_accessible_by_user(user_id)
+        matching_projects = [p for p in projects if p.name == project]
+        if len(matching_projects) == 1:
+            project_id = matching_projects[0].id
+        else:
+            if not matching_projects:
+                msg = 'no project of name "{}" found'.format(project)
+                raise NameNotFoundError(msg)
+            else:
+                msg = (
+                    'more than one project of name "{}", please select by '
+                    "project ID instead"
+                ).format(project)
+                raise AmbiguousNameError(msg)
     return project_id
 
 
@@ -185,15 +206,18 @@ def _server_by_name(project_id, server_name, status=None):
     if len(matching_servers) == 1:
         return matching_servers[0]
     else:
+        adjective = "available" if status is None else status
         if not matching_servers:
-            tpl = 'no {} server of name "{}" in this project'
+            msg = 'no {} server of name "{}" in this project'.format(
+                adjective, server_name
+            )
+            raise NameNotFoundError(msg)
         else:
-            tpl = (
+            msg = (
                 'more than one {} server of name "{}", please select by '
                 "server ID instead"
-            )
-        adjective = "available" if status is None else status
-        raise AmbiguousNameError(tpl.format(adjective, server_name))
+            ).format(adjective, server_name)
+            raise AmbiguousNameError(msg)
 
 
 def _any_server(project_id, status=None):
@@ -229,13 +253,14 @@ def _job_by_name(project_id, job_name):
         return matching_jobs[0]
     else:
         if not matching_jobs:
-            tpl = 'no job of name "{}" in this project'
+            msg = 'no job of name "{}" in this project'.format(job_name)
+            raise NameNotFoundError(msg)
         else:
-            tpl = (
+            msg = (
                 'more than one job of name "{}", please select by job ID '
                 "instead"
-            )
-        raise AmbiguousNameError(tpl.format(job_name))
+            ).format(job_name)
+            raise AmbiguousNameError(msg)
 
 
 def _resolve_job(project, job):
@@ -258,13 +283,16 @@ def _environment_by_name(project_id, environment_name):
         return matching_environments[0]
     else:
         if not matching_environments:
-            tpl = 'no available environment of name "{}"'
+            msg = 'no available environment of name "{}"'.format(
+                environment_name
+            )
+            raise NameNotFoundError(msg)
         else:
-            tpl = (
+            msg = (
                 'more than one environment of name "{}", please select by '
                 "environment ID instead"
-            )
-        raise AmbiguousNameError(tpl.format(environment_name))
+            ).format(environment_name)
+            raise AmbiguousNameError(msg)
 
 
 def _resolve_environment(project_id, environment):
@@ -334,6 +362,8 @@ class FacultyCLIGroup(click.Group):
         try:
             super(FacultyCLIGroup, self).__call__(*args, **kwargs)
         except AmbiguousNameError as err:
+            _print_and_exit(err, 64)
+        except NameNotFoundError as err:
             _print_and_exit(err, 64)
         except faculty_cli.auth.AuthenticationError as err:
             _print_and_exit(err, 77)
@@ -1187,7 +1217,7 @@ def ls(project, path):
             project_id=project_id, prefix=relative_path, depth=1
         )
     except NotFound:
-        _print_and_exit("{}: No such file or directory".format(path), 66)
+        _print_and_exit("{}: No such file or directory".format(path), 64)
 
     try:
         [directory_details] = directory_details_list
