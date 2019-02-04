@@ -616,9 +616,12 @@ def new(
         resources = DedicatedServerResources(node_type=machine_type)
 
     client = faculty.client("server")
-    server_id = client.create(
-        project_id, type_, resources, name, version, environment_ids
-    )
+    try:
+        server_id = client.create(
+            project_id, type_, resources, name, version, environment_ids
+        )
+    except faculty.clients.base.BadRequest as err:
+        _print_and_exit(err.error, 64)
     click.echo("Creating server {} in project {}".format(server_id, project))
     if wait:
         while True:
