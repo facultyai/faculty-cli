@@ -210,7 +210,7 @@ def _server_by_name(project_id, server_name, status=None):
     if len(servers) == 1:
         return servers[0]
     else:
-        adjective = "available" if status is None else status
+        adjective = "available" if status is None else status.value
         if not servers:
             msg = 'no {} server of name "{}" in this project'.format(
                 adjective, server_name
