@@ -203,6 +203,15 @@ def _resolve_project(project):
     return project_id
 
 
+def _get_servers(project_id, name=None, status=None):
+    """List servers in the given project."""
+    client = faculty.client("server")
+    servers = client.list(project_id, name)
+    if status is not None:
+        servers = [s for s in servers if s.status == status]
+    return servers
+
+
 def _server_by_name(project_id, server_name, status=None):
     """Resolve a project ID and server name to a server ID."""
     servers = _get_servers(project_id, server_name, status)
@@ -244,15 +253,6 @@ def _resolve_server(project, server=None, ensure_running=True):
     except TypeError:
         server_id = _any_server(project_id, status)
     return project_id, server_id
-
-
-def _get_servers(project_id, name=None, status=None):
-    """List servers in the given project."""
-    client = faculty.client("server")
-    servers = client.list(project_id, name)
-    if status is not None:
-        servers = [s for s in servers if s.status == status]
-    return servers
 
 
 def _job_by_name(project_id, job_name):
