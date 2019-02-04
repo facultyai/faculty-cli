@@ -769,7 +769,7 @@ def apply(project, server, environment):
     environment_id = _resolve_environment(project_id, environment)
 
     client = faculty.client("server")
-    client.apply_environment(environment_id, server_id)
+    client.apply_environment(server_id, environment_id)
 
     click.echo(
         "Applying environment {} to server {} for project {}".format(
