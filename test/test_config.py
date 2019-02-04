@@ -15,13 +15,6 @@ def test_hudson_url(mock_profile):
     )
 
 
-def test_galleon_url(mock_profile):
-    assert (
-        faculty_cli.config.galleon_url()
-        == "https://galleon.services.subdomain.my.faculty.ai"
-    )
-
-
 def test_baskerville_url(mock_profile):
     assert (
         faculty_cli.config.baskerville_url()

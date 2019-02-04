@@ -31,16 +31,20 @@ import uuid
 from distutils.version import StrictVersion
 
 import click
-import requests
 import faculty
 import faculty.config
-from faculty.clients.base import NotFound
+import requests
+import faculty.clients.base
+from faculty.clients.server import (
+    DedicatedServerResources,
+    ServerStatus,
+    SharedServerResources,
+)
 from tabulate import tabulate
 
 import faculty_cli.auth
 import faculty_cli.config
 import faculty_cli.client
-import faculty_cli.galleon
 import faculty_cli.hound
 import faculty_cli.parse
 import faculty_cli.shell
@@ -199,15 +203,24 @@ def _resolve_project(project):
     return project_id
 
 
+def _get_servers(project_id, name=None, status=None):
+    """List servers in the given project."""
+    client = faculty.client("server")
+    servers = client.list(project_id, name)
+    if status is not None:
+        servers = [s for s in servers if s.status == status]
+    return servers
+
+
 def _server_by_name(project_id, server_name, status=None):
     """Resolve a project ID and server name to a server ID."""
-    client = faculty_cli.galleon.Galleon()
-    matching_servers = client.get_servers(project_id, server_name, status)
-    if len(matching_servers) == 1:
-        return matching_servers[0]
+    servers = _get_servers(project_id, server_name, status)
+
+    if len(servers) == 1:
+        return servers[0]
     else:
-        adjective = "available" if status is None else status
-        if not matching_servers:
+        adjective = "available" if status is None else status.value
+        if not servers:
             msg = 'no {} server of name "{}" in this project'.format(
                 adjective, server_name
             )
@@ -221,23 +234,22 @@ def _server_by_name(project_id, server_name, status=None):
 
 
 def _any_server(project_id, status=None):
-    """Get any running server from project."""
-    client = faculty_cli.galleon.Galleon()
-    servers_ = client.get_servers(project_id, status=status)
-    if not servers_:
-        adjective = "available" if status is None else status
+    """Get any server from project."""
+    servers = _get_servers(project_id, status=status)
+    if not servers:
+        adjective = "available" if status is None else status.value
         _print_and_exit("No {} server in project.".format(adjective), 78)
-    return servers_[0].id_
+    return servers[0].id
 
 
 def _resolve_server(project, server=None, ensure_running=True):
     """Resolve project and server names to project and server IDs."""
     project_id = _resolve_project(project)
-    status = "running" if ensure_running else None
+    status = ServerStatus.RUNNING if ensure_running else None
     try:
         server_id = uuid.UUID(server)
     except ValueError:
-        server_id = _server_by_name(project_id, server, status).id_
+        server_id = _server_by_name(project_id, server, status).id
     except TypeError:
         server_id = _any_server(project_id, status)
     return project_id, server_id
@@ -316,13 +328,13 @@ def _save_key_to_file(key):
 
 
 def _get_ssh_details(project_id, server_id):
-    client = faculty_cli.galleon.Galleon()
+    client = faculty.client("server")
     for _ in range(20):
         try:
-            return client.ssh_details(project_id, server_id)
-        except faculty_cli.auth.AuthenticationError as err:
+            return client.get_ssh_details(project_id, server_id)
+        except faculty.clients.base.Forbidden as err:
             _print_and_exit(err, 77)
-        except faculty_cli.client.FacultyServiceError:
+        except faculty.clients.base.NotFound:
             click.echo("Server still starting, waiting 30 seconds")
         time.sleep(30)
     _print_and_exit("Could not connect to server", 69)
@@ -453,13 +465,13 @@ def server():
 )
 def list_servers(project, all, verbose):
     """List your Faculty servers."""
-    _check_credentials()
-    client = faculty_cli.galleon.Galleon()
-    status_filter = None if all else "running"
     project_id = _resolve_project(project)
-    servers_ = client.get_servers(project_id, status=status_filter)
+
+    status_filter = None if all else ServerStatus.RUNNING
+    servers = _get_servers(project_id, status=status_filter)
+
     if verbose:
-        if not servers_:
+        if not servers:
             click.echo("No servers.")
         else:
             headers = (
@@ -473,30 +485,32 @@ def list_servers(project, all, verbose):
                 "Started",
             )
             rows = []
-            for server in servers_:
-                if server.machine_type == "custom":
+            for server in servers:
+                if isinstance(server.resources, SharedServerResources):
                     machine_type = "-"
-                    cpus = "{:.3g}".format(server.milli_cpus / 1000)
-                    memory_gb = "{:.3g}GB".format(server.memory_mb / 1000)
+                    cpus = "{:.3g}".format(server.resources.milli_cpus / 1000)
+                    memory_gb = "{:.3g}GB".format(
+                        server.resources.memory_mb / 1000
+                    )
                 else:
-                    machine_type = server.machine_type
+                    machine_type = server.resources.node_type
                     cpus = "-"
                     memory_gb = "-"
                 rows.append(
                     (
                         server.name,
-                        server.type_,
+                        server.type,
                         machine_type,
                         cpus,
                         memory_gb,
-                        server.status,
-                        server.id_,
+                        server.status.value,
+                        server.id,
                         server.created_at.strftime("%Y-%m-%d %H:%M"),
                     )
                 )
             click.echo(tabulate(rows, headers, tablefmt="plain"))
     else:
-        for server in servers_:
+        for server in servers:
             click.echo(server.name)
 
 
@@ -506,15 +520,18 @@ def list_servers(project, all, verbose):
 def open_(project, server):
     """Open a Faculty server in your browser."""
     project_id, server_id = _resolve_server(project, server)
-    client = faculty_cli.galleon.Galleon()
-    server = client.get_server(project_id, server_id)
+
+    client = faculty.client("server")
+    server = client.get(project_id, server_id)
+
     https_services = [
         service for service in server.services if service.name == "https"
     ]
     if not https_services:
         _print_and_exit(
             "Server {} is not running an application that "
-            "can be opened in a web browser".format(server.name)
+            "can be opened in a web browser".format(server.name),
+            1,
         )
     [https_service] = https_services
     url = "{}://{}".format(https_service.scheme, https_service.host)
@@ -585,38 +602,34 @@ def new(
 ):
     """Create a new Faculty server."""
     # pylint: disable=too-many-arguments
-    _check_credentials()
     project_id = _resolve_project(project)
     environment_ids = [
         _resolve_environment(project_id, env) for env in environments
     ]
 
     if machine_type is None or machine_type == "custom":
-        machine_type = "custom"
-        milli_cpus = int(cores * 1000)
-        memory_mb = int(memory * 1000)
+        resources = SharedServerResources(
+            milli_cpus=int(cores * 1000), memory_mb=int(memory * 1000)
+        )
 
     elif machine_type is not None and machine_type != "custom":
-        milli_cpus = None
-        memory_mb = None
+        resources = DedicatedServerResources(node_type=machine_type)
 
-    client = faculty_cli.galleon.Galleon()
-    server_id = client.create_server(
-        project_id,
-        type_,
-        machine_type,
-        milli_cpus,
-        memory_mb,
-        name,
-        version,
-        environment_ids,
-    )
+    client = faculty.client("server")
+    try:
+        server_id = client.create(
+            project_id, type_, resources, name, version, environment_ids
+        )
+    except faculty.clients.base.BadRequest as err:
+        _print_and_exit(err.error, 64)
     click.echo("Creating server {} in project {}".format(server_id, project))
     if wait:
         while True:
             servers = [
-                server.id_
-                for server in client.get_servers(project_id, status="running")
+                server.id
+                for server in _get_servers(
+                    project_id, status=ServerStatus.RUNNING
+                )
             ]
             if server_id in servers:
                 break
@@ -628,10 +641,9 @@ def new(
 @click.argument("server")
 def terminate(project, server):
     """Terminate a Faculty server."""
-    _check_credentials()
     _, server_id = _resolve_server(project, server, ensure_running=False)
-    client = faculty_cli.galleon.Galleon()
-    client.terminate_server(server_id)
+    client = faculty.client("server")
+    client.delete(server_id)
 
 
 @server.command(name="instance-types")
@@ -694,27 +706,21 @@ def shell(project, server, ssh_opts):
 
     $ faculty shell <project> <server> -L 9000:localhost:8888
     """
-    _check_credentials()
 
     project_id, server_id = _resolve_server(project, server)
-    client = faculty_cli.galleon.Galleon()
-    details = client.ssh_details(project_id, server_id)
+    client = faculty.client("server")
+    details = client.get_ssh_details(project_id, server_id)
 
-    hostname = details["hostname"]
-    port = details["port"]
-    username = details["username"]
-    key = details["key"]
-
-    with _save_key_to_file(key) as filename:
+    with _save_key_to_file(details.key) as filename:
         cmd = (
             ["ssh"]
             + SSH_OPTIONS
             + [
                 "-p",
-                str(port),
+                str(details.port),
                 "-i",
                 filename,
-                "{}@{}".format(username, hostname),
+                "{}@{}".format(details.username, details.hostname),
             ]
         )
         cmd += list(ssh_opts)
@@ -765,7 +771,7 @@ def apply(project, server, environment):
     project_id, server_id = _resolve_server(project, server)
     environment_id = _resolve_environment(project_id, environment)
 
-    client = faculty_cli.galleon.Galleon()
+    client = faculty.client("server")
     client.apply_environment(server_id, environment_id)
 
     click.echo(
@@ -785,6 +791,18 @@ def _format_command(command):
     return " ".join(formatted_parts)
 
 
+def _get_service(server, name):
+    for service in server.services:
+        if service.name == name:
+            return service
+    raise RuntimeError("cube has no service called {}".format(name))
+
+
+def _get_hound_url(server):
+    service = _get_service(server, "hound")
+    return "{}://{}:{}".format(service.scheme, service.host, service.port)
+
+
 @environment.command()
 @click.argument("project")
 @click.argument("server")
@@ -792,10 +810,12 @@ def status(project, server):
     """Get the execution status for an environment."""
     project_id, server_id = _resolve_server(project, server)
 
-    galleon_client = faculty_cli.galleon.Galleon()
-    server = galleon_client.get_server(project_id, server_id)
+    server_client = faculty.client("server")
+    server = server_client.get(project_id, server_id)
 
-    client = faculty_cli.hound.Hound(server.hound_url)
+    hound_url = _get_hound_url(server)
+
+    client = faculty_cli.hound.Hound(hound_url)
     execution = client.latest_environment_execution()
 
     if execution is None:
@@ -828,10 +848,12 @@ def logs(project, server, step_number):
     """Stream the logs for a server environment application."""
     project_id, server_id = _resolve_server(project, server)
 
-    galleon_client = faculty_cli.galleon.Galleon()
-    server = galleon_client.get_server(project_id, server_id)
+    server_client = faculty.client("server")
+    server = server_client.get(project_id, server_id)
 
-    client = faculty_cli.hound.Hound(server.hound_url)
+    hound_url = _get_hound_url(server)
+
+    client = faculty_cli.hound.Hound(hound_url)
     execution = client.latest_environment_execution()
 
     if execution is None:
@@ -1078,16 +1100,12 @@ def put(project, local, remote, server):
 
     project_id, server_id = _resolve_server(project, server)
 
-    client = faculty_cli.galleon.Galleon()
-    details = client.ssh_details(project_id, server_id)
+    client = faculty.client("server")
+    details = client.get_ssh_details(project_id, server_id)
 
     escaped_remote = faculty_cli.shell.quote(remote)
 
-    hostname = details["hostname"]
-    port = details["port"]
-    username = details["username"]
-    key = details["key"]
-    with _save_key_to_file(key) as filename:
+    with _save_key_to_file(details.key) as filename:
         cmd = (
             ["scp"]
             + SSH_OPTIONS
@@ -1095,9 +1113,11 @@ def put(project, local, remote, server):
                 "-i",
                 filename,
                 "-P",
-                str(port),
+                str(details.port),
                 os.path.expanduser(local),
-                u"{}@{}:{}".format(username, hostname, escaped_remote),
+                u"{}@{}:{}".format(
+                    details.username, details.hostname, escaped_remote
+                ),
             ]
         )
         _run_ssh_cmd(cmd)
@@ -1113,16 +1133,12 @@ def get(project, remote, local, server):
 
     project_id, server_id = _resolve_server(project, server)
 
-    client = faculty_cli.galleon.Galleon()
-    details = client.ssh_details(project_id, server_id)
+    client = faculty.client("server")
+    details = client.get_ssh_details(project_id, server_id)
 
     escaped_remote = faculty_cli.shell.quote(remote)
 
-    hostname = details["hostname"]
-    port = details["port"]
-    username = details["username"]
-    key = details["key"]
-    with _save_key_to_file(key) as filename:
+    with _save_key_to_file(details.key) as filename:
         cmd = (
             ["scp"]
             + SSH_OPTIONS
@@ -1130,8 +1146,10 @@ def get(project, remote, local, server):
                 "-i",
                 filename,
                 "-P",
-                str(port),
-                u"{}@{}:{}".format(username, hostname, escaped_remote),
+                str(details.port),
+                u"{}@{}:{}".format(
+                    details.username, details.hostname, escaped_remote
+                ),
                 os.path.expanduser(local),
             ]
         )
@@ -1143,25 +1161,24 @@ def _rsync(project, local, remote, server, rsync_opts, up):
 
     project_id, server_id = _resolve_server(project, server)
 
-    client = faculty_cli.galleon.Galleon()
-    details = client.ssh_details(project_id, server_id)
-
-    hostname = details["hostname"]
-    port = details["port"]
-    username = details["username"]
-    key = details["key"]
+    client = faculty.client("server")
+    details = client.get_ssh_details(project_id, server_id)
 
     escaped_remote = faculty_cli.shell.quote(remote)
     if up:
         path_from = local
-        path_to = u"{}@{}:{}".format(username, hostname, escaped_remote)
+        path_to = u"{}@{}:{}".format(
+            details.username, details.hostname, escaped_remote
+        )
     else:
-        path_from = u"{}@{}:{}".format(username, hostname, escaped_remote)
+        path_from = u"{}@{}:{}".format(
+            details.username, details.hostname, escaped_remote
+        )
         path_to = local
 
-    with _save_key_to_file(key) as filename:
+    with _save_key_to_file(details.key) as filename:
         ssh_cmd = "ssh {} -p {} -i {}".format(
-            " ".join(SSH_OPTIONS), port, filename
+            " ".join(SSH_OPTIONS), details.port, filename
         )
 
         rsync_cmd = ["rsync", "-a", "-e", ssh_cmd, path_from, path_to]
@@ -1216,8 +1233,8 @@ def ls(project, path):
         directory_details_list = client.list(
             project_id=project_id, prefix=relative_path, depth=1
         )
-    except NotFound:
-        _print_and_exit("{}: No such file or directory".format(path), 64)
+    except faculty.clients.base.NotFound:
+        _print_and_exit("{}: No such file or directory".format(path), 66)
 
     try:
         [directory_details] = directory_details_list
