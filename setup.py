@@ -1,6 +1,6 @@
 """Setup module for the Faculty CLI."""
 
-# Copyright 2016-2019 ASI Data Science
+# Copyright 2016-2019 Faculty Science Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,8 +37,8 @@ setup(
     long_description=read_long_description(),
     long_description_content_type="text/markdown",
     url="https://sherlockml.com",
-    author="ASI Data Science",
-    author_email="engineering@asidatascience.com",
+    author="Faculty",
+    author_email="opensource@faculty.ai",
     license="Apache Software License",
     classifiers=[
         "Development Status :: 3 - Alpha",
