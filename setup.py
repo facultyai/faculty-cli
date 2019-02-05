@@ -37,7 +37,7 @@ setup(
     long_description=read_long_description(),
     long_description_content_type="text/markdown",
     url="https://sherlockml.com",
-    author="ASI Data Science",
+    author="Faculty",
     author_email="engineering@asidatascience.com",
     license="Apache Software License",
     classifiers=[
