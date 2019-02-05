@@ -38,7 +38,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://sherlockml.com",
     author="Faculty",
-    author_email="engineering@asidatascience.com",
+    author_email="opensource@faculty.ai",
     license="Apache Software License",
     classifiers=[
         "Development Status :: 3 - Alpha",
