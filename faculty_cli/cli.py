@@ -1248,3 +1248,13 @@ def ls(project, path):
             click.echo("/project{}/".format(item.path))
         else:
             click.echo("/project{}".format(item.path))
+
+
+@cli.command()
+@click.argument("shell", type=click.Choice(["bash", "fish", "zsh"]))
+def completions(shell):
+    """
+    Generate completion scripts for the given shell.
+    """
+    with open("completions/{}".format(shell)) as fp:
+        click.echo(fp.read())
