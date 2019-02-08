@@ -1229,7 +1229,7 @@ def ls(project, path):
     try:
         root_child = path.split("/")[1]
     except IndexError:
-        _print_and_exit("{}: Not a valid path".format(path), 66)
+        _print_and_exit("{}: Not a valid path".format(path), 64)
     if root_child is None or root_child != "project":
         _print_and_exit("{} is outside the project workspace".format(path), 66)
 
