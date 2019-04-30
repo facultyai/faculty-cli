@@ -622,16 +622,18 @@ def new(
         )
     except faculty.clients.base.BadRequest as err:
         _print_and_exit(err.error, 64)
-    click.echo("Creating server {} in project {}".format(server_id, project))
+
+    server = client.get(project_id, server_id)
+    click.echo("Creating server {} in project {}".format(server.name, project))
     if wait:
         while True:
-            servers = [
-                server.id
-                for server in _get_servers(
+            server_ids = {
+                server_.id
+                for server_ in _get_servers(
                     project_id, status=ServerStatus.RUNNING
                 )
-            ]
-            if server_id in servers:
+            }
+            if server.id in server_ids:
                 break
             time.sleep(1)
 
