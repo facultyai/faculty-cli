@@ -1226,6 +1226,8 @@ def sync_down(project, remote, local, server, rsync_opts):
 @click.argument("path")
 def ls(project, path):
     """List files and directories on Faculty workspace."""
+    if not path.startswith("/project"):
+        _print_and_exit("{} is outside the project workspace".format(path), 66)
 
     project_id = _resolve_project(project)
     relative_path = os.path.relpath(path, "/project")
