@@ -317,14 +317,18 @@ def _resolve_environment(project_id, environment):
 
 
 @contextlib.contextmanager
-def _save_key_to_file(key):
-    tmpdir = tempfile.mkdtemp()
-    filename = os.path.join(tmpdir, "key.pem")
+def _save_key_to_file(key, use_tmp_dir=True, key_name="key.pem"):
+    if use_tmp_dir:
+        tmpdir = tempfile.mkdtemp()
+        filename = os.path.join(tmpdir, key_name)
+    else:
+        filename = os.path.join(os.path.expanduser("~/.ssh/"), key_name)
     with open(filename, "w") as keyfile:
         keyfile.write(key)
     os.chmod(filename, stat.S_IRUSR & ~stat.S_IRGRP & ~stat.S_IROTH)
     yield filename
-    shutil.rmtree(tmpdir)
+    if use_tmp_dir:
+        shutil.rmtree(tmpdir)
 
 
 PERMISSION_DENIED_MESSAGE = """
@@ -705,7 +709,6 @@ def instance_types(verbose):
         for type_ in types:
             click.echo(type_.name)
 
-
 @cli.command(context_settings={"ignore_unknown_options": True})
 @click.argument("project")
 @click.argument("server")
@@ -738,41 +741,32 @@ def shell(project, server, ssh_opts):
         cmd += list(ssh_opts)
         _run_ssh_cmd(cmd)
 
+@cli.command(context_settings={"ignore_unknown_options": True})
+@click.argument("project")
+@click.argument("server")
+def creds(project, server):
+    """Generate credentials for a faculty server, save them to a config file in ~/.ssh
+    For use with VS code server"""
+
+    project_id, server_id = _resolve_server(project, server)
+    client = faculty.client("server")
+    details = client.get_ssh_details(project_id, server_id)
+
+    with _save_key_to_file(details.key, False, key_name="{}_{}.pem".format(project.lower().replace(" ","_"), server)) as filename:
+        config = """
+Host {}_{}
+   Hostname {}
+   Port {}
+   User {}
+   IdentityFile {}""".format(project.lower().replace(" ","_"), server, details.hostname, details.port,
+                details.username, filename)
+        with open(os.path.expanduser("~/.ssh/faculty_config"), "a") as f:
+            f.write(config)
 
 @cli.group()
 def environment():
     """Manipulate Faculty server environments."""
     _check_credentials()
-
-
-@environment.command(name="list")
-@click.argument("project")
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    help="Print extra information about environments.",
-)
-def list_environments(project, verbose):
-    """List your environments."""
-    client = faculty.client("environment")
-    project_id = _resolve_project(project)
-    environments = client.list(project_id)
-    if verbose:
-        if not environments:
-            click.echo("No environments.")
-        else:
-            click.echo(
-                tabulate(
-                    [(e.name, e.id) for e in environments],
-                    ("Environment Name", "ID"),
-                    tablefmt="plain",
-                )
-            )
-    else:
-        for environment in environments:
-            click.echo(environment.name)
-
 
 @environment.command()
 @click.argument("project")
