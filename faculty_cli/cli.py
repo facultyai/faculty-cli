@@ -709,6 +709,7 @@ def instance_types(verbose):
         for type_ in types:
             click.echo(type_.name)
 
+
 @cli.command(context_settings={"ignore_unknown_options": True})
 @click.argument("project")
 @click.argument("server")
@@ -741,6 +742,7 @@ def shell(project, server, ssh_opts):
         cmd += list(ssh_opts)
         _run_ssh_cmd(cmd)
 
+
 @cli.command(context_settings={"ignore_unknown_options": True})
 @click.argument("project")
 @click.argument("server")
@@ -752,21 +754,33 @@ def creds(project, server):
     client = faculty.client("server")
     details = client.get_ssh_details(project_id, server_id)
 
-    with _save_key_to_file(details.key, False, key_name="{}_{}.pem".format(project.lower().replace(" ","_"), server)) as filename:
+    with _save_key_to_file(
+        details.key,
+        False,
+        key_name="{}_{}.pem".format(project.lower().replace(" ", "_"), server),
+    ) as filename:
         config = """
 Host {}_{}
    Hostname {}
    Port {}
    User {}
-   IdentityFile {}""".format(project.lower().replace(" ","_"), server, details.hostname, details.port,
-                details.username, filename)
+   IdentityFile {}""".format(
+            project.lower().replace(" ", "_"),
+            server,
+            details.hostname,
+            details.port,
+            details.username,
+            filename,
+        )
         with open(os.path.expanduser("~/.ssh/faculty_config"), "a") as f:
             f.write(config)
+
 
 @cli.group()
 def environment():
     """Manipulate Faculty server environments."""
     _check_credentials()
+
 
 @environment.command()
 @click.argument("project")
