@@ -319,16 +319,19 @@ def _resolve_environment(project_id, environment):
 @contextlib.contextmanager
 def _save_key_to_file(key, use_tmp_dir=True, key_name="key.pem"):
     if use_tmp_dir:
-        tmpdir = tempfile.mkdtemp()
-        filename = os.path.join(tmpdir, key_name)
+        parent_dir = tempfile.mkdtemp()
     else:
-        filename = os.path.join(os.path.expanduser("~/.ssh/"), key_name)
+        parent_dir = os.path.expanduser("~/.ssh")
+
+    filename = os.path.join(parent_dir, key_name)
+
     with open(filename, "w") as keyfile:
         keyfile.write(key)
     os.chmod(filename, stat.S_IRUSR & ~stat.S_IRGRP & ~stat.S_IROTH)
     yield filename
+
     if use_tmp_dir:
-        shutil.rmtree(tmpdir)
+        shutil.rmtree(parent_dir)
 
 
 PERMISSION_DENIED_MESSAGE = """
@@ -743,38 +746,42 @@ def shell(project, server, ssh_opts):
         _run_ssh_cmd(cmd)
 
 
-@cli.command(context_settings={"ignore_unknown_options": True})
+@server.command(context_settings={"ignore_unknown_options": True})
 @click.argument("project")
 @click.argument("server")
 def creds(project, server):
-    """Generate credentials for a faculty server,
-    save them to a config file in ~/.ssh
-    For use with VS code server"""
+    """Generate an SSH configuration file for a Faculty server.
+
+    This is useful, for example, for use with VS Code or sftp.
+    """
 
     project_id, server_id = _resolve_server(project, server)
     client = faculty.client("server")
     details = client.get_ssh_details(project_id, server_id)
 
+    slug = "{}-{}".format(project.lower().replace(" ", "_"), server)
+
     with _save_key_to_file(
-        details.key,
-        False,
-        key_name="{}_{}.pem".format(project.lower().replace(" ", "_"), server),
+        details.key, use_tmp_dir=False, key_name="{}.pem".format(slug)
     ) as filename:
-        config = """
-Host {}_{}
-   Hostname {}
-   Port {}
-   User {}
-   IdentityFile {}""".format(
-            project.lower().replace(" ", "_"),
-            server,
-            details.hostname,
-            details.port,
-            details.username,
-            filename,
+        config = textwrap.dedent(
+            """\
+            Host {}
+               Hostname {}
+               Port {}
+               User {}
+               IdentityFile {}
+
+            """.format(
+                slug,
+                details.hostname,
+                details.port,
+                details.username,
+                filename,
+            )
         )
-        with open(os.path.expanduser("~/.ssh/config"), "a") as f:
-            f.write(config)
+        with open(os.path.expanduser("~/.ssh/faculty_config"), "a") as fp:
+            fp.write(config)
 
 
 @cli.group()
