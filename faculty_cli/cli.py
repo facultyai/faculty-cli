@@ -747,7 +747,8 @@ def shell(project, server, ssh_opts):
 @click.argument("project")
 @click.argument("server")
 def creds(project, server):
-    """Generate credentials for a faculty server, save them to a config file in ~/.ssh
+    """Generate credentials for a faculty server, 
+    save them to a config file in ~/.ssh
     For use with VS code server"""
 
     project_id, server_id = _resolve_server(project, server)
