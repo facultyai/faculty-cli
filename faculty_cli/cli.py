@@ -327,19 +327,6 @@ def _save_key_to_file(key):
     shutil.rmtree(tmpdir)
 
 
-def _get_ssh_details(project_id, server_id):
-    client = faculty.client("server")
-    for _ in range(20):
-        try:
-            return client.get_ssh_details(project_id, server_id)
-        except faculty.clients.base.Forbidden as err:
-            _print_and_exit(err, 77)
-        except faculty.clients.base.NotFound:
-            click.echo("Server still starting, waiting 30 seconds")
-        time.sleep(30)
-    _print_and_exit("Could not connect to server", 69)
-
-
 PERMISSION_DENIED_MESSAGE = """
 Permission was denied when attempting to connect to your Faculty server. A
 bug in earlier versions of OpenSSH (including the version distributed with
