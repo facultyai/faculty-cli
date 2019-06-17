@@ -17,6 +17,7 @@
 from __future__ import division
 
 import contextlib
+import json
 import operator
 import os
 import os.path
@@ -39,6 +40,7 @@ from faculty.clients.server import (
     DedicatedServerResources,
     ServerStatus,
     SharedServerResources,
+    SSHDetailsSchema,
 )
 from tabulate import tabulate
 
@@ -253,6 +255,12 @@ def _resolve_server(project, server=None, ensure_running=True):
     except TypeError:
         server_id = _any_server(project_id, status)
     return project_id, server_id
+
+
+def _get_ssh_details(project, server):
+    project_id, server_id = _resolve_server(project, server)
+    client = faculty.client("server")
+    return client.get_ssh_details(project_id, server_id)
 
 
 def _job_by_name(project_id, job_name):
@@ -704,6 +712,15 @@ def instance_types(verbose):
             click.echo(type_.name)
 
 
+@server.command(name="ssh-details")
+@click.argument("project")
+@click.argument("server")
+def ssh_details(project, server):
+    """Print SSH details for a Faculty server."""
+    details = _get_ssh_details(project, server)
+    click.echo(json.dumps(SSHDetailsSchema().dump(details)))
+
+
 @cli.command(context_settings={"ignore_unknown_options": True})
 @click.argument("project")
 @click.argument("server")
@@ -718,9 +735,7 @@ def shell(project, server, ssh_opts):
 
     """
 
-    project_id, server_id = _resolve_server(project, server)
-    client = faculty.client("server")
-    details = client.get_ssh_details(project_id, server_id)
+    details = _get_ssh_details(project, server)
 
     with _save_key_to_file(details.key) as filename:
         cmd = (
