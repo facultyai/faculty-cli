@@ -45,11 +45,13 @@ from tabulate import tabulate
 import faculty_cli.auth
 import faculty_cli.config
 import faculty_cli.client
+import faculty_cli.completion
 import faculty_cli.hound
 import faculty_cli.parse
 import faculty_cli.shell
 import faculty_cli.update
 import faculty_cli.version
+
 
 SSH_OPTIONS = [
     "-o",
@@ -1239,3 +1241,28 @@ def ls(project, path):
             click.echo("/project{}/".format(item.path))
         else:
             click.echo("/project{}".format(item.path))
+
+
+@cli.group()
+def completion():
+    """Generate autocompletion scripts for Faculty CLI."""
+    pass
+
+
+@completion.command()
+def bash():
+    click.echo(faculty_cli.completion.bash_script)
+
+
+@completion.command()
+def zsh():
+    click.echo(faculty_cli.completion.zsh_script)
+
+
+@completion.command()
+def fish():
+    click.echo(faculty_cli.completion.fish_script)
+
+
+if __name__ == '__main__':
+    cli()
