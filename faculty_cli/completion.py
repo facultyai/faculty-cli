@@ -470,10 +470,18 @@ complete -c faculty -n "__fish_seen_subcommand_from file" -l server -d "Name or 
 
 complete -c faculty -n "__fish_is_first_token" -a login -d "Write Faculty credentials to file."
 
-# projects
+# project
 
-complete -c faculty -n "__fish_is_first_token" -a projects -d "List accessible Faculty projects."
-complete -c faculty -n "__fish_seen_subcommand_from projects" -s v -l verbose -d "Print extra information about projects."
+complete -c faculty -n "__fish_is_first_token" -a project -d "Manipulate Faculty projects."
+complete -c faculty -n "__fish_seen_subcommand_from project; and __fish_is_token_n 3" -x -a list -d "List accessible Faculty projects."
+complete -c faculty -n "__fish_seen_subcommand_from project; and __fish_seen_subcommand_from list" -s v -l verbose -d "Print extra information about projects."
+
+# completion
+
+complete -c faculty -n "__fish_is_first_token" -a completion -d "Generate auto-completion scripts for faculty_cli."
+complete -c faculty -n "__fish_seen_subcommand_from completion; and __fish_is_token_n 3" -x -a bash -d "Source for bash completion."
+complete -c faculty -n "__fish_seen_subcommand_from completion; and __fish_is_token_n 3" -x -a zsh -d "Source for zsh completion."
+complete -c faculty -n "__fish_seen_subcommand_from completion; and __fish_is_token_n 3" -x -a fish -d "Source for fish completion."
 
 # server
 
