@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """Autocompletion support for Bash, Zsh and Fish."""
 
 # Copyright 2016-2019 Faculty Science Limited
