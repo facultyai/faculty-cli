@@ -637,14 +637,14 @@ zsh_script = r"""_faculty() {
                   '--help[Display help message.]' \
                   '--server[Name or ID of server to use.]: :{_faculty_servers "$line[1]"}' \
                 && ret=0
-		;; 
+		        ;; 
                 (ls)
                 _arguments -C \
                   '1: :_faculty_projects' \
                   '2: :{_remote "$line[1]" "$line[2]"}' \
                   '--help[Display help message.]' \
                 && ret=0
-		;; 
+		        ;; 
               esac
             ;;
           esac
@@ -693,11 +693,25 @@ zsh_script = r"""_faculty() {
         (login|version)
           _message 'No more arguments' && ret=0
         ;;
-        (projects)
-        _arguments \
-          '(-v --verbose)'{-v,--verbose}'[Print extra information about projects.]' \
-          "--help[Display help message.]" && ret=0
+        (project)
+        _arguments -C \
+          '1:: :_faculty_project_cmds' \
+          '*:: :->project-args' && ret=0
+          case $state in
+            (project-args)
+              case $line[1] in
+                (list)
+                  _arguments -C \
+                    '--help[Display help message.]' \
+                    '(-v --verbose)'{-v,--verbose}'[Print extra information about projects.]' \
+                  && ret=0
+                ;;
+              esac
+            ;;
+          esac
         ;;
+        (completion)
+        _arguments -C '1:: :_faculty_completion_cmds' && ret=0 ;;
         (server)
           _arguments -C \
             '1:: :_faculty_server_cmds' \
@@ -771,11 +785,12 @@ zsh_script = r"""_faculty() {
 
 _faculty_cmds() {
   local commands; commands=(
+    'completion:Generate auto-completion scripts for faculty_cli.'
     'environment:Manipulate Faculty server environments.'
     'file:Manipulate files in a Faculty project.'
     'job:Manipulate Faculty jobs.'
     'login:Write Faculty credentials to file.'
-    'projects:List accessible Faculty projects.'
+    'project:Manipulate Faculty projects.'
     'server:Manipulate Faculty servers.'
     'shell:Open a shell on an Faculty server.'
     'version:Print the faculty version number.'
@@ -802,6 +817,24 @@ _faculty_file_cmds() {
     'sync-down:Sync remote files down from project with rsync.'
     'sync-up:Sync local files up to a project with rsync.'
     'ls:List files and directories on the Faculty workspace.'
+    '--help:Display help message.'
+  )
+  _describe 'command' commands
+}
+
+_faculty_project_cmds() {
+  local commands; commands=(
+    'list:List accessible Faculty projects.'
+    '--help:Display help message.'
+  )
+  _describe 'command' commands
+}
+
+_faculty_completion_cmds() {
+  local commands; commands=(
+    'bash:Source for Bash completion.'
+    'fish:Source for Fish completion.'
+    'zsh:Source for Zsh completion.'
     '--help:Display help message.'
   )
   _describe 'command' commands
