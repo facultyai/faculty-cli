@@ -1251,16 +1251,25 @@ def completion():
 
 @completion.command()
 def bash():
+    """
+    Source for bash completion.
+    """
     click.echo(faculty_cli.completion.bash_script)
 
 
 @completion.command()
 def zsh():
+    """
+    Source for zsh completion.
+    """
     click.echo(faculty_cli.completion.zsh_script)
 
 
 @completion.command()
 def fish():
+    """
+    Source for fish completion.
+    """
     click.echo(faculty_cli.completion.fish_script)
 
 
