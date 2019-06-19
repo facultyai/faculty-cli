@@ -1245,7 +1245,7 @@ def ls(project, path):
 
 @cli.group()
 def completion():
-    """Generate autocompletion scripts for faculty_cli."""
+    """Generate auto-completion scripts for faculty_cli."""
     pass
 
 
@@ -1271,7 +1271,3 @@ def fish():
     Source for fish completion.
     """
     click.echo(faculty_cli.completion.fish_script)
-
-
-if __name__ == '__main__':
-    cli()
