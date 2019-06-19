@@ -14,8 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-bash_script = """\
-_complete() {
+bash_script = r"""_complete() {
 
     local cur="${COMP_WORDS[COMP_CWORD]}"
 
@@ -51,15 +50,23 @@ _complete_newlinesep() {
 }
 
 _get_projects() {
-    faculty projects
+    faculty project list 2>/dev/null
 }
 
 _get_servers() {
-    faculty server list "$1"
+    faculty server list "$1" 2>/dev/null
 }
 
 _get_environments() {
-    faculty environment list "$1"
+    faculty environment list "$1" 2>/dev/null
+}
+
+_get_jobs() {
+    faculty job list "$1" 2>/dev/null
+}
+
+_get_job_runs() {
+    faculty job list-runs "$1" "$2" 2>/dev/null
 }
 
 _add_double_quotes() {
@@ -121,9 +128,30 @@ _complete_environment() {
     return 0
 }
 
+_complete_job() {
+
+    local project=$(_remove_double_quotes "$1")
+    local opts=$(_get_jobs "$project")
+    local IFS=$'\n'
+    _complete_newlinesep "$opts"
+    _add_double_quotes_to_compreply
+
+    return 0
+}
+
+_complete_job_run() {
+
+    local project=$(_remove_double_quotes "$1")
+    local job=$(_remove_double_quotes "$2")
+    local opts=$(_get_job_runs "$project" "$job")
+    echo $project
+
+    return 0
+}
+
 _faculty() {
     if [[ $COMP_CWORD -eq 1 ]]; then
-        _complete "environment file home login projects server shell version --help"
+        _complete "environment file home login project server shell version completion job"
     fi
 
     if [[ $COMP_CWORD -gt 1 ]]; then
@@ -214,6 +242,43 @@ _faculty() {
                 esac
             fi
             ;;
+        
+        "completion")
+
+            if [[ $COMP_CWORD -eq 2 ]]; then
+                _complete "bash zsh fish"
+            fi
+            ;;        
+            
+        "project")
+
+            if [[ $COMP_CWORD -eq 2 ]]; then
+                _complete "list"
+            fi
+            ;;     
+            
+        "job")
+
+            if [[ $COMP_CWORD -eq 2 ]]; then
+                _complete "list list-runs logs run"
+            fi
+            if [[ $COMP_CWORD -eq 3 ]]; then
+                _complete_project 
+            fi
+            if [[ $COMP_CWORD -eq 4 ]]; then
+                local project=${COMP_WORDS[3]}
+                _complete_job "$project"
+            fi
+            if [[ $COMP_CWORD -eq 5 ]]; then
+                local selection=${COMP_WORDS[2]}
+                if [[ $selection == logs ]]; then
+                    local project=${COMP_WORDS[3]}
+                    local job=${COMP_WORDS[4]}
+                    _complete_job_run "$project" "$job"
+                fi
+            fi
+            ;;     
+            
         esac
         return 0
     fi
@@ -223,8 +288,7 @@ complete -F _faculty faculty
 """
 
 
-fish_script = """\
-function __fish_faculty_list_projects
+fish_script = r"""function __fish_faculty_list_projects
     command faculty project list 2>/dev/null
 end
 
@@ -334,7 +398,7 @@ function __fish_faculty_type_is_option
     return 1
 end
 
-complete -c faculty -n "__fish_faculty_type_is_option" -x -a "jupyter jupyterlab rstudio zeppelin"
+complete -c faculty -n "__fish_faculty_type_is_option" -x -a "jupyter jupyterlab rstudio"
 
 # list available machine types, when machine-type is an option (i.e. --machine-type)
 
@@ -477,10 +541,7 @@ complete -c faculty -n "__fish_seen_subcommand_from job; and __fish_seen_subcomm
 """
 
 
-zsh_script = """\
-#compdef faculty
-
-_faculty() {
+zsh_script = r"""_faculty() {
   local state line
   typeset -A opt_args
 
@@ -815,7 +876,6 @@ _server_type(){
     'jupyter'
     'jupyterlab'
     'rstudio'
-    'zeppelin'
   )
   _describe 'command' commands
 }
@@ -973,5 +1033,5 @@ _remote_path_suggestions() {
   SML_REMOTE_PATH_SUGGESTIONS=$(faculty file ls $1 $p)
 }
 
-_faculty "$@"
+compdef _faculty faculty
 """
