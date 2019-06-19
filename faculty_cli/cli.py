@@ -1245,7 +1245,7 @@ def ls(project, path):
 
 @cli.group()
 def completion():
-    """Generate autocompletion scripts for Faculty CLI."""
+    """Generate autocompletion scripts for faculty_cli."""
     pass
 
 
