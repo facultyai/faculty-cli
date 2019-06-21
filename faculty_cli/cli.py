@@ -45,7 +45,6 @@ from tabulate import tabulate
 import faculty_cli.auth
 import faculty_cli.config
 import faculty_cli.client
-import faculty_cli.completion
 import faculty_cli.hound
 import faculty_cli.parse
 import faculty_cli.shell
@@ -1243,8 +1242,13 @@ def ls(project, path):
             click.echo("/project{}".format(item.path))
 
 
-@click.command()
+@cli.command()
 @click.argument("shell", type=click.Choice(["bash", "zsh", "fish"]))
 def completion(shell):
     """Generate auto-completion scripts for faculty_cli."""
-    click.echo(shell)
+    module_path = os.path.dirname(__file__)
+    click.echo(
+        open(
+            os.path.join(module_path, "shell_autocompletion_scripts", shell)
+        ).read()
+    )
