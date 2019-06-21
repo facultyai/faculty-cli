@@ -189,9 +189,9 @@ complete -c faculty -n "__fish_seen_subcommand_from project; and __fish_seen_sub
 # completion
 
 complete -c faculty -n "__fish_is_first_token" -a completion -d "Generate auto-completion scripts for faculty_cli."
-complete -c faculty -n "__fish_seen_subcommand_from completion; and __fish_is_token_n 3" -x -a bash -d "Source for bash completion."
-complete -c faculty -n "__fish_seen_subcommand_from completion; and __fish_is_token_n 3" -x -a zsh -d "Source for zsh completion."
-complete -c faculty -n "__fish_seen_subcommand_from completion; and __fish_is_token_n 3" -x -a fish -d "Source for fish completion."
+complete -c faculty -n "__fish_seen_subcommand_from completion; and __fish_is_token_n 3" -x -a bash
+complete -c faculty -n "__fish_seen_subcommand_from completion; and __fish_is_token_n 3" -x -a zsh
+complete -c faculty -n "__fish_seen_subcommand_from completion; and __fish_is_token_n 3" -x -a fish
 
 # server
 

@@ -289,10 +289,9 @@ _faculty_project_cmds() {
 
 _faculty_completion_cmds() {
   local commands; commands=(
-    'bash:Source for Bash completion.'
-    'fish:Source for Fish completion.'
-    'zsh:Source for Zsh completion.'
-    '--help:Display help message.'
+    'bash'
+    'fish'
+    'zsh'
   )
   _describe 'command' commands
 }

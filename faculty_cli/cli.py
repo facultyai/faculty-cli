@@ -1243,31 +1243,8 @@ def ls(project, path):
             click.echo("/project{}".format(item.path))
 
 
-@cli.group()
-def completion():
+@click.command()
+@click.argument("shell", type=click.Choice(["bash", "zsh", "fish"]))
+def completion(shell):
     """Generate auto-completion scripts for faculty_cli."""
-    pass
-
-
-@completion.command()
-def bash():
-    """
-    Source for bash completion.
-    """
-    click.echo(faculty_cli.completion.bash_script)
-
-
-@completion.command()
-def zsh():
-    """
-    Source for zsh completion.
-    """
-    click.echo(faculty_cli.completion.zsh_script)
-
-
-@completion.command()
-def fish():
-    """
-    Source for fish completion.
-    """
-    click.echo(faculty_cli.completion.fish_script)
+    click.echo(shell)
