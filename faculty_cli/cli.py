@@ -343,7 +343,10 @@ def _run_ssh_cmd(argv):
     line = process.stderr.readline()
     while line:
         click.echo(line, nl=False, err=True)
-        if b"Permission denied" in line:
+        if (
+            b"Permission denied" in line
+            and b"rsync: send_files failed to open" not in line
+        ):
             click.echo(PERMISSION_DENIED_MESSAGE, err=True)
         line = process.stderr.readline()
     return process.wait()
