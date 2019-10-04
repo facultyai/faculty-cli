@@ -3,6 +3,7 @@ from click.testing import CliRunner
 
 from faculty_cli.cli import cli
 from faculty.clients.project import ProjectClient, Project
+import faculty.clients.base
 from test.fixtures import PROJECT, USER_ID
 
 
@@ -66,11 +67,11 @@ def test_list_projects_verbose(
 
 
 def test_create_project(
-        mocker,
-        mock_update_check,
-        mock_check_credentials,
-        mock_profile,
-        mock_user_id
+    mocker,
+    mock_update_check,
+    mock_check_credentials,
+    mock_profile,
+    mock_user_id,
 ):
     runner = CliRunner()
 
@@ -78,6 +79,25 @@ def test_create_project(
     result = runner.invoke(cli, ["project", "new", "test-project"])
 
     assert result.exit_code == 0
-    assert result.output == "Created project {} with ID {}\n".format(PROJECT.name, PROJECT.id)
+    assert result.output == "Created project {} with ID {}\n".format(
+        PROJECT.name, PROJECT.id
+    )
 
     ProjectClient.create.assert_called_once_with(USER_ID, "test-project")
+
+
+def test_create_project_bad_request(
+    mocker,
+    mock_update_check,
+    mock_check_credentials,
+    mock_profile,
+    mock_user_id,
+):
+    runner = CliRunner()
+    response = faculty.clients.base.BadRequest("response", error="some error")
+    mocker.patch.object(ProjectClient, "create", side_effect=response)
+
+    result = runner.invoke(cli, ["project", "new", "test-project"])
+
+    assert result.exit_code == 64
+    assert result.output == "some error\n"

@@ -439,7 +439,10 @@ def new_project(name):
     """Create new project."""
     client = faculty.client("project")
     user_id = faculty_cli.auth.user_id()
-    returned_project = client.create(user_id, name)
+    try:
+        returned_project = client.create(user_id, name)
+    except faculty.clients.base.BadRequest as err:
+        _print_and_exit(err.error, 64)
     click.echo(
         "Created project {} with ID {}".format(
             returned_project.name, returned_project.id
