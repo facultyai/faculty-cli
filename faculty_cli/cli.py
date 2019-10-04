@@ -434,11 +434,9 @@ def list_projects(verbose):
 
 
 @project.command(name="new")
-@click.argument(
-    "name"
-)
+@click.argument("name")
 def new_project(name):
-    """Create new project"""
+    """Create new project."""
     client = faculty.client("project")
     user_id = faculty_cli.auth.user_id()
     returned_project = client.create(user_id, name)
