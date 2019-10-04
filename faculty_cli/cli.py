@@ -440,7 +440,11 @@ def new_project(name):
     client = faculty.client("project")
     user_id = faculty_cli.auth.user_id()
     returned_project = client.create(user_id, name)
-    click.echo("Created project {} with ID {}".format(returned_project.name, returned_project.id))
+    click.echo(
+        "Created project {} with ID {}".format(
+            returned_project.name, returned_project.id
+        )
+    )
 
 
 @cli.group()
