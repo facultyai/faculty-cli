@@ -2,7 +2,7 @@ import pytest
 from click.testing import CliRunner
 
 from faculty_cli.cli import cli
-from faculty.clients.project import ProjectClient, Project
+from faculty.clients.project import ProjectClient
 import faculty.clients.base
 from test.fixtures import PROJECT, USER_ID
 
