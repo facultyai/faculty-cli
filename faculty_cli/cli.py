@@ -433,6 +433,23 @@ def list_projects(verbose):
             click.echo(project.name)
 
 
+@project.command(name="new")
+@click.argument("name")
+def new_project(name):
+    """Create new project."""
+    client = faculty.client("project")
+    user_id = faculty_cli.auth.user_id()
+    try:
+        returned_project = client.create(user_id, name)
+    except faculty.clients.base.BadRequest as err:
+        _print_and_exit(err.error, 64)
+    click.echo(
+        "Created project {} with ID {}".format(
+            returned_project.name, returned_project.id
+        )
+    )
+
+
 @cli.group()
 def server():
     """Manipulate Faculty servers."""
