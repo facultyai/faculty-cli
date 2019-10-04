@@ -2,7 +2,7 @@ import pytest
 from click.testing import CliRunner
 
 from faculty_cli.cli import cli
-from faculty.clients.project import ProjectClient
+from faculty.clients.project import ProjectClient, Project
 from test.fixtures import PROJECT, USER_ID
 
 
@@ -63,3 +63,21 @@ def test_list_projects_verbose(
     ProjectClient._get.assert_called_once_with(
         "/user/{}".format(USER_ID), schema_mock.return_value
     )
+
+
+def test_create_project(
+        mocker,
+        mock_update_check,
+        mock_check_credentials,
+        mock_profile,
+        mock_user_id
+):
+    runner = CliRunner()
+
+    mocker.patch.object(ProjectClient, "create", return_value=PROJECT)
+    result = runner.invoke(cli, ["project", "new", "test-project"])
+
+    assert result.exit_code == 0
+    assert result.output == "Created project {} with ID {}\n".format(PROJECT.name, PROJECT.id)
+
+    ProjectClient.create.assert_called_once_with(USER_ID, "test-project")
