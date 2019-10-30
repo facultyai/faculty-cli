@@ -374,6 +374,9 @@ class FacultyCLIGroup(click.Group):
 
 
 @click.group(cls=FacultyCLIGroup)
+@click.version_option(
+    version=faculty_cli.version.__version__, prog_name="faculty-cli"
+)
 def cli():
     """Command line interface to Faculty."""
     try:
