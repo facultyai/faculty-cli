@@ -773,7 +773,7 @@ Host {}_{}
             details.username,
             filename,
         )
-        with open(os.path.expanduser("~/.ssh/faculty_config"), "a") as f:
+        with open(os.path.expanduser("~/.ssh/config"), "a") as f:
             f.write(config)
 
 
