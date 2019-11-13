@@ -718,7 +718,18 @@ def instance_types(verbose):
 def ssh_details(project, server):
     """Print SSH details for a Faculty server."""
     details = _get_ssh_details(project, server)
-    click.echo(json.dumps(SSHDetailsSchema().dump(details)))
+    with _save_key_to_file(details.key) as filename:
+        subprocess.run(["ssh-add", filename])
+    click.echo(
+        json.dumps(
+            {
+                key: value
+                for key, value
+                in SSHDetailsSchema().dump(details).items()
+                if key != "key"
+            }
+        )
+    )
 
 
 @cli.command(context_settings={"ignore_unknown_options": True})
