@@ -780,7 +780,7 @@ def creds(project, server):
                 filename,
             )
         )
-        with open(os.path.expanduser("~/.ssh/faculty_config"), "a") as fp:
+        with open(os.path.expanduser("~/.ssh/config"), "a") as fp:
             fp.write(config)
 
 
