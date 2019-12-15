@@ -666,9 +666,7 @@ def terminate(project, server):
     help="Print extra information about instance types.",
 )
 def instance_types(verbose):
-    """
-    List the types of servers available on dedicated infrastructure.
-    """
+    """List the types of servers available on dedicated infrastructure."""
     client = faculty.client("cluster")
     types = client.list_single_tenanted_node_types(
         interactive_instances_configured=True
@@ -717,6 +715,7 @@ def shell(project, server, ssh_opts):
     up, for example, port forwarding:
 
     $ faculty shell <project> <server> -L 9000:localhost:8888
+
     """
 
     project_id, server_id = _resolve_server(project, server)
@@ -779,7 +778,7 @@ def list_environments(project, verbose):
 @click.argument("server")
 @click.argument("environment")
 def apply(project, server, environment):
-    """Apply an environment to the server"""
+    """Apply an environment to the server."""
     project_id, server_id = _resolve_server(project, server)
     environment_id = _resolve_environment(project_id, environment)
 
@@ -1013,6 +1012,7 @@ def run_job(project, job, parameter_values, num_subruns):
     \b
     To run a job multiple times with no parameters:
     $ faculty job run PROJECT JOB --num-subruns 2
+
     """
 
     if num_subruns is None and not parameter_values:
@@ -1211,6 +1211,7 @@ def sync_up(project, local, remote, server, rsync_opts):
     """Sync local files up to a project with rsync.
 
     Arguments are used as "rsync -a LOCAL server:REMOTE [RSYNC_OPTS]".
+
     """
     _rsync(project, local, remote, server, rsync_opts, True)
 
@@ -1227,6 +1228,7 @@ def sync_down(project, remote, local, server, rsync_opts):
     """Sync remote files down from project with rsync.
 
     Arguments are used as "rsync -a server:REMOTE LOCAL [RSYNC_OPTS]".
+
     """
     _rsync(project, local, remote, server, rsync_opts, False)
 

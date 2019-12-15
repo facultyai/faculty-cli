@@ -143,7 +143,7 @@ class FacultyService(object):
 
     @contextmanager
     def _stream(self, endpoint):
-        """Stream from a SSE endpoint
+        """Stream from a SSE endpoint.
 
         Usage
         -----
