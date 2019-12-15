@@ -39,7 +39,7 @@ def casebook_url():
 
 
 def hudson_url():
-    """Return URL for Hudson"""
+    """Return URL for Hudson."""
     return _url_for_service("hudson")
 
 

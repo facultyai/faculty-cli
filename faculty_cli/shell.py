@@ -1,7 +1,7 @@
-"""
-Shell helper functions.
+"""Shell helper functions.
 
 Vendored from https://github.com/python/cpython/blob/3.6/Lib/shlex.py
+
 """
 
 # Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
