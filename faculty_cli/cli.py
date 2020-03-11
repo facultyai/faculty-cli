@@ -731,8 +731,7 @@ def ssh(project, server):
         json.dumps(
             {
                 key: value
-                for key, value
-                in SSHDetailsSchema().dump(details).items()
+                for key, value in SSHDetailsSchema().dump(details).items()
                 if key != "key"
             }
         )
