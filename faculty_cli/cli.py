@@ -717,8 +717,8 @@ def instance_types(verbose):
 @click.argument("server")
 def ssh(project, server):
     """
-    Add SSH private key for a Faculty server into the SSH authentication agent and
-    print the username, hostname and port.
+    Add SSH private key for a Faculty server into the SSH authentication agent
+    and print the username, hostname and port.
     """
     details = _get_ssh_details(project, server)
     with _save_key_to_file(details.key) as filename:
