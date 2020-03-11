@@ -537,11 +537,13 @@ def _list_all_servers(all, verbose):
     help="Print extra information about servers.",
 )
 def list_servers(project, all, verbose):
-    ("""List your Faculty servers."""
-    """\n\nIf you do not specify a project, all servers will be listed""")
+    (
+        """List your Faculty servers."""
+        """\n\nIf you do not specify a project, all servers will be listed"""
+    )
     if not project:
         return _list_all_servers(all, verbose)
-        
+
     project_id = _resolve_project(project)
 
     status_filter = None if all else ServerStatus.RUNNING
