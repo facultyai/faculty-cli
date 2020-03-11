@@ -722,7 +722,11 @@ def ssh(project, server):
     """
     details = _get_ssh_details(project, server)
     with _save_key_to_file(details.key) as filename:
-        subprocess.run(["ssh-add", filename])
+        subprocess.run(
+            ["ssh-add", filename],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
     click.echo(
         json.dumps(
             {
