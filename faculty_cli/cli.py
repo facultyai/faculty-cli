@@ -515,9 +515,9 @@ def _list_all_servers(all, verbose):
             else:
                 rows.append((project.name, server.name))
     if verbose and rows:
-        click.echo(tabulate(rows, verbose_headers))
+        click.echo(tabulate(rows, verbose_headers, tablefmt="plain"))
     elif rows:
-        click.echo(tabulate(rows, headers))
+        click.echo(tabulate(rows, headers, tablefmt="plain"))
     else:
         click.echo("No servers.")
 
@@ -541,6 +541,7 @@ def list_servers(project, all, verbose):
     """\n\nIf you do not specify a project, all servers will be listed""")
     if not project:
         return _list_all_servers(all, verbose)
+        
     project_id = _resolve_project(project)
 
     status_filter = None if all else ServerStatus.RUNNING
