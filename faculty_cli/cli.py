@@ -51,6 +51,7 @@ import faculty_cli.shell
 import faculty_cli.update
 import faculty_cli.version
 
+
 SSH_OPTIONS = [
     "-o",
     "IdentitiesOnly=yes",
@@ -177,16 +178,20 @@ def _check_credentials():
         _check_creds_file_perms()
 
 
+def _list_projects():
+    _check_credentials()
+    client = faculty.client("project")
+    user_id = faculty_cli.auth.user_id()
+    projects = client.list_accessible_by_user(user_id)
+    return projects
+
+
 def _resolve_project(project):
     """Resolve a project name or ID to a project ID."""
     try:
         project_id = uuid.UUID(project)
     except ValueError:
-        account_client = faculty.client("account")
-        user_id = account_client.authenticated_user_id()
-
-        project_client = faculty.client("project")
-        projects = project_client.list_accessible_by_user(user_id)
+        projects = _list_projects()
         matching_projects = [p for p in projects if p.name == project]
         if len(matching_projects) == 1:
             project_id = matching_projects[0].id
@@ -253,6 +258,19 @@ def _resolve_server(project, server=None, ensure_running=True):
     except TypeError:
         server_id = _any_server(project_id, status)
     return project_id, server_id
+
+
+def _server_spec(server):
+    """Return formatted strings for machine type, cpu and memory of server"""
+    if isinstance(server.resources, SharedServerResources):
+        machine_type = "-"
+        cpus = "{:.3g}".format(server.resources.milli_cpus / 1000)
+        memory_gb = "{:.3g}GB".format(server.resources.memory_mb / 1000)
+    else:
+        machine_type = server.resources.node_type
+        cpus = "-"
+        memory_gb = "-"
+    return machine_type, cpus, memory_gb
 
 
 def _job_by_name(project_id, job_name):
@@ -416,10 +434,7 @@ def project():
 )
 def list_projects(verbose):
     """List accessible Faculty projects."""
-    _check_credentials()
-    client = faculty.client("project")
-    user_id = faculty_cli.auth.user_id()
-    projects = client.list_accessible_by_user(user_id)
+    projects = _list_projects()
     if verbose:
         if not projects:
             click.echo("No projects.")
@@ -459,8 +474,56 @@ def server():
     pass
 
 
+def _list_all_servers(all, verbose):
+    """List your Faculty servers from all projects"""
+    projects = _list_projects()
+    status_filter = None if all else ServerStatus.RUNNING
+    rows = []
+    verbose_headers = (
+        "Project Name",
+        "Project ID",
+        "Server Name",
+        "Type",
+        "Machine Type",
+        "CPUs",
+        "RAM",
+        "Status",
+        "Server ID",
+        "Started",
+    )
+    headers = ("Project", "Server")
+    rows = []
+    for project in projects:
+        servers = _get_servers(project.id, status=status_filter)
+        for server in servers:
+            if verbose:
+                machine_type, cpus, memory_gb = _server_spec(server)
+                rows.append(
+                    (
+                        project.name,
+                        project.id,
+                        server.name,
+                        server.type,
+                        machine_type,
+                        cpus,
+                        memory_gb,
+                        server.status.value,
+                        server.id,
+                        server.created_at.strftime("%Y-%m-%d %H:%M"),
+                    )
+                )
+            else:
+                rows.append((project.name, server.name))
+    if verbose and rows:
+        click.echo(tabulate(rows, verbose_headers))
+    elif rows:
+        click.echo(tabulate(rows, headers))
+    else:
+        click.echo("No servers.")
+
+
 @server.command(name="list")
-@click.argument("project")
+@click.argument("project", required=False)
 @click.option(
     "-a",
     "--all",
@@ -474,7 +537,10 @@ def server():
     help="Print extra information about servers.",
 )
 def list_servers(project, all, verbose):
-    """List your Faculty servers."""
+    ("""List your Faculty servers."""
+    """\n\nIf you do not specify a project, all servers will be listed""")
+    if not project:
+        return _list_all_servers(all, verbose)
     project_id = _resolve_project(project)
 
     status_filter = None if all else ServerStatus.RUNNING
@@ -496,16 +562,7 @@ def list_servers(project, all, verbose):
             )
             rows = []
             for server in servers:
-                if isinstance(server.resources, SharedServerResources):
-                    machine_type = "-"
-                    cpus = "{:.3g}".format(server.resources.milli_cpus / 1000)
-                    memory_gb = "{:.3g}GB".format(
-                        server.resources.memory_mb / 1000
-                    )
-                else:
-                    machine_type = server.resources.node_type
-                    cpus = "-"
-                    memory_gb = "-"
+                machine_type, cpus, memory_gb = _server_spec(server)
                 rows.append(
                     (
                         server.name,
