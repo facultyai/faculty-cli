@@ -188,11 +188,7 @@ def _list_projects():
 
 
 def _match_project(project):
-    project_id = _try_uuid(project)
-    if project_id:
-        client = faculty.client("project")
-        return client.get(project_id)
-
+    """Find a project by matching its name"""
     projects = _list_projects()
     matching_projects = [p for p in projects if p.name == project]
     if len(matching_projects) == 1:
@@ -207,22 +203,16 @@ def _match_project(project):
                 "project ID instead"
             ).format(project)
             raise AmbiguousNameError(msg)
-    return project
-
-
-def _try_uuid(value):
-    "Return a uuid if valid, None otherwise"
-    try:
-        uuid_value = uuid.UUID(value)
-        return uuid_value
-    except ValueError:
-        return None
+    return project.id
 
 
 def _resolve_project(project):
     """Resolve a project name or ID to a project ID."""
-    project_id = _try_uuid(project)
-    return project_id if project_id else _match_project(project).id
+    try:
+        project_id = uuid.UUID(project)
+    except ValueError:
+        project_id = _match_project(project)
+    return project_id
 
 
 def _get_servers(project_id, name=None, status=None):
