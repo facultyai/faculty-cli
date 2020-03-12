@@ -50,7 +50,7 @@ def test_list_all_servers(
         result.output
         == tabulate(
             [(PROJECT.name, DEDICATED_SERVER.name)],
-            ("Project", "Server"),
+            ("Project Name", "Server Name"),
             tablefmt="plain",
         )
         + "\n"
@@ -176,7 +176,7 @@ def test_list_servers_verbose(
                 "CPUs",
                 "RAM",
                 "Status",
-                "ID",
+                "Server ID",
                 "Started",
             ),
             tablefmt="plain",

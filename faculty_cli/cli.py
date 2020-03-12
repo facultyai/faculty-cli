@@ -179,6 +179,7 @@ def _check_credentials():
 
 
 def _list_projects():
+    """List all projects accessible by user"""
     _check_credentials()
     client = faculty.client("project")
     user_id = faculty_cli.auth.user_id()
@@ -186,26 +187,42 @@ def _list_projects():
     return projects
 
 
+def _match_project(project):
+    project_id = _try_uuid(project)
+    if project_id:
+        client = faculty.client("project")
+        return client.get(project_id)
+
+    projects = _list_projects()
+    matching_projects = [p for p in projects if p.name == project]
+    if len(matching_projects) == 1:
+        project = matching_projects[0]
+    else:
+        if not matching_projects:
+            msg = 'no project of name "{}" found'.format(project)
+            raise NameNotFoundError(msg)
+        else:
+            msg = (
+                'more than one project of name "{}", please select by '
+                "project ID instead"
+            ).format(project)
+            raise AmbiguousNameError(msg)
+    return project
+
+
+def _try_uuid(value):
+    "Return a uuid if valid, None otherwise"
+    try:
+        uuid_value = uuid.UUID(value)
+        return uuid_value
+    except ValueError:
+        return None
+
+
 def _resolve_project(project):
     """Resolve a project name or ID to a project ID."""
-    try:
-        project_id = uuid.UUID(project)
-    except ValueError:
-        projects = _list_projects()
-        matching_projects = [p for p in projects if p.name == project]
-        if len(matching_projects) == 1:
-            project_id = matching_projects[0].id
-        else:
-            if not matching_projects:
-                msg = 'no project of name "{}" found'.format(project)
-                raise NameNotFoundError(msg)
-            else:
-                msg = (
-                    'more than one project of name "{}", please select by '
-                    "project ID instead"
-                ).format(project)
-                raise AmbiguousNameError(msg)
-    return project_id
+    project_id = _try_uuid(project)
+    return project_id if project_id else _match_project(project).id
 
 
 def _get_servers(project_id, name=None, status=None):
@@ -474,56 +491,8 @@ def server():
     pass
 
 
-def _list_all_servers(all, verbose):
-    """List your Faculty servers from all projects"""
-    projects = _list_projects()
-    status_filter = None if all else ServerStatus.RUNNING
-    rows = []
-    verbose_headers = (
-        "Project Name",
-        "Project ID",
-        "Server Name",
-        "Type",
-        "Machine Type",
-        "CPUs",
-        "RAM",
-        "Status",
-        "Server ID",
-        "Started",
-    )
-    headers = ("Project", "Server")
-    rows = []
-    for project in projects:
-        servers = _get_servers(project.id, status=status_filter)
-        for server in servers:
-            if verbose:
-                machine_type, cpus, memory_gb = _server_spec(server)
-                rows.append(
-                    (
-                        project.name,
-                        project.id,
-                        server.name,
-                        server.type,
-                        machine_type,
-                        cpus,
-                        memory_gb,
-                        server.status.value,
-                        server.id,
-                        server.created_at.strftime("%Y-%m-%d %H:%M"),
-                    )
-                )
-            else:
-                rows.append((project.name, server.name))
-    if verbose and rows:
-        click.echo(tabulate(rows, verbose_headers, tablefmt="plain"))
-    elif rows:
-        click.echo(tabulate(rows, headers, tablefmt="plain"))
-    else:
-        click.echo("No servers.")
-
-
 @server.command(name="list")
-@click.argument("project", required=False)
+@click.argument("provided_project", required=False, metavar="PROJECT")
 @click.option(
     "-a",
     "--all",
@@ -536,52 +505,65 @@ def _list_all_servers(all, verbose):
     is_flag=True,
     help="Print extra information about servers.",
 )
-def list_servers(project, all, verbose):
+def list_servers(provided_project, all, verbose):
     (
         """List your Faculty servers."""
         """\n\nIf you do not specify a project, all servers will be listed"""
     )
-    if not project:
-        return _list_all_servers(all, verbose)
-
-    project_id = _resolve_project(project)
+    if not provided_project:
+        projects = [project for project in _list_projects()]
+    else:
+        projects = [_resolve_project(provided_project)]
 
     status_filter = None if all else ServerStatus.RUNNING
-    servers = _get_servers(project_id, status=status_filter)
-
-    if verbose:
-        if not servers:
-            click.echo("No servers.")
-        else:
-            headers = (
-                "Server Name",
-                "Type",
-                "Machine Type",
-                "CPUs",
-                "RAM",
-                "Status",
-                "ID",
-                "Started",
-            )
-            rows = []
-            for server in servers:
-                machine_type, cpus, memory_gb = _server_spec(server)
-                rows.append(
-                    (
-                        server.name,
-                        server.type,
-                        machine_type,
-                        cpus,
-                        memory_gb,
-                        server.status.value,
-                        server.id,
-                        server.created_at.strftime("%Y-%m-%d %H:%M"),
-                    )
-                )
-            click.echo(tabulate(rows, headers, tablefmt="plain"))
-    else:
+    headers = (
+        "Project Name",
+        "Project ID",
+        "Server Name",
+        "Type",
+        "Machine Type",
+        "CPUs",
+        "RAM",
+        "Status",
+        "Server ID",
+        "Started",
+    )
+    found_servers = []
+    for project in projects:
+        servers = _get_servers(
+            project if provided_project else project.id, status=status_filter
+        )
         for server in servers:
-            click.echo(server.name)
+            machine_type, cpus, memory_gb = _server_spec(server)
+            found_servers.append(
+                (
+                    project.name if not provided_project else "",
+                    project.id if not provided_project else project,
+                    server.name,
+                    server.type,
+                    machine_type,
+                    cpus,
+                    memory_gb,
+                    server.status.value,
+                    server.id,
+                    server.created_at.strftime("%Y-%m-%d %H:%M"),
+                )
+            )
+    if not found_servers:
+        print("No servers.")
+    elif provided_project and verbose:
+        servers = [server[2:] for server in found_servers]
+        click.echo(tabulate(servers, headers[2:], tablefmt="plain"))
+    elif provided_project:
+        for server in found_servers:
+            click.echo(server[2])
+    elif verbose:
+        click.echo(tabulate(found_servers, headers, tablefmt="plain"))
+    else:
+        servers = [(server[0], server[2]) for server in found_servers]
+        click.echo(
+            tabulate(servers, (headers[0], headers[2]), tablefmt="plain")
+        )
 
 
 @server.command(name="open")
