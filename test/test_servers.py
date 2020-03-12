@@ -1,12 +1,10 @@
-from test.test_projects import mock_check_credentials
 import pytest
 from tabulate import tabulate
 from click.testing import CliRunner
 
-from faculty_cli.cli import cli, _list_projects, _server_spec
+from faculty_cli.cli import cli, _server_spec
 
 from faculty.clients.server import ServerClient
-import faculty.clients.base
 from test.fixtures import (
     PROJECT,
     SHARED_SERVER,
