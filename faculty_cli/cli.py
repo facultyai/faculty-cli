@@ -501,9 +501,9 @@ def list_servers(provided_project, all, verbose):
         """\n\nIf you do not specify a project, all servers will be listed"""
     )
     if not provided_project:
-        projects = [project for project in _list_projects()]
+        projects = [(project.id, project.name) for project in _list_projects()]
     else:
-        projects = [_resolve_project(provided_project)]
+        projects = [(_resolve_project(provided_project), "")]
 
     status_filter = None if all else ServerStatus.RUNNING
     headers = (
@@ -519,16 +519,14 @@ def list_servers(provided_project, all, verbose):
         "Started",
     )
     found_servers = []
-    for project in projects:
-        servers = _get_servers(
-            project if provided_project else project.id, status=status_filter
-        )
+    for project_id, project_name in projects:
+        servers = _get_servers(project_id, status=status_filter)
         for server in servers:
             machine_type, cpus, memory_gb = _server_spec(server)
             found_servers.append(
                 (
-                    project.name if not provided_project else "",
-                    project.id if not provided_project else project,
+                    project_name,
+                    project_id,
                     server.name,
                     server.type,
                     machine_type,
