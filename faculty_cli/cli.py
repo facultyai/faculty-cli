@@ -29,7 +29,7 @@ import textwrap
 import time
 import uuid
 from distutils.version import StrictVersion
-
+from collections import defaultdict
 import click
 import faculty
 import faculty.config
@@ -39,6 +39,7 @@ from faculty.clients.server import (
     DedicatedServerResources,
     ServerStatus,
     SharedServerResources,
+    ServerSchema,
 )
 from tabulate import tabulate
 
@@ -219,6 +220,15 @@ def _get_servers(project_id, name=None, status=None):
     """List servers in the given project."""
     client = faculty.client("server")
     servers = client.list(project_id, name)
+    if status is not None:
+        servers = [s for s in servers if s.status == status]
+    return servers
+
+
+def _get_user_servers(user_id, status=None):
+    client = faculty.client("server")
+    endpoint = "/user/{}/instances".format(user_id)
+    servers = client._get(endpoint, ServerSchema(many=True))
     if status is not None:
         servers = [s for s in servers if s.status == status]
     return servers
@@ -500,10 +510,18 @@ def list_servers(provided_project, all, verbose):
         """List your Faculty servers."""
         """\n\nIf you do not specify a project, all servers will be listed"""
     )
+    status_filter = None if all else ServerStatus.RUNNING
     if not provided_project:
         projects = [(project.id, project.name) for project in _list_projects()]
+        user_id = faculty_cli.auth.user_id()
+        all_servers = _get_user_servers(user_id, status=status_filter)
+        servers = defaultdict(list)
+        for server in all_servers:
+            servers[server.project_id].append(server)
     else:
-        projects = [(_resolve_project(provided_project), "")]
+        project_id = _resolve_project(provided_project)
+        servers = {project_id: _get_servers(project_id, status=status_filter)}
+        projects = [(project_id, "")]
 
     status_filter = None if all else ServerStatus.RUNNING
     headers = (
@@ -520,8 +538,7 @@ def list_servers(provided_project, all, verbose):
     )
     found_servers = []
     for project_id, project_name in projects:
-        servers = _get_servers(project_id, status=status_filter)
-        for server in servers:
+        for server in servers[project_id]:
             machine_type, cpus, memory_gb = _server_spec(server)
             found_servers.append(
                 (
