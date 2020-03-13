@@ -180,7 +180,7 @@ def _check_credentials():
 
 
 def _list_projects():
-    """List all projects accessible by user"""
+    """List all projects accessible by user."""
     _check_credentials()
     client = faculty.client("project")
     user_id = faculty_cli.auth.user_id()
@@ -189,7 +189,7 @@ def _list_projects():
 
 
 def _match_project(project):
-    """Find a project by matching its name"""
+    """Find a project by matching its name."""
     projects = _list_projects()
     matching_projects = [p for p in projects if p.name == project]
     if len(matching_projects) == 1:
@@ -226,6 +226,7 @@ def _get_servers(project_id, name=None, status=None):
 
 
 def _get_user_servers(user_id, status=None):
+    """List all servers owned by user."""
     client = faculty.client("server")
     endpoint = "/user/{}/instances".format(user_id)
     servers = client._get(endpoint, ServerSchema(many=True))
@@ -278,7 +279,7 @@ def _resolve_server(project, server=None, ensure_running=True):
 
 
 def _server_spec(server):
-    """Return formatted strings for machine type, cpu and memory of server"""
+    """Return formatted strings for machine type, cpu and memory of server."""
     if isinstance(server.resources, SharedServerResources):
         machine_type = "-"
         cpus = "{:.3g}".format(server.resources.milli_cpus / 1000)
@@ -292,7 +293,6 @@ def _server_spec(server):
 
 def _job_by_name(project_id, job_name):
     """Resolve a project ID and job name to a job ID."""
-
     client = faculty.client("job")
     jobs = client.list(project_id)
     matching_jobs = [job for job in jobs if job.metadata.name == job_name]
@@ -508,7 +508,7 @@ def server():
 def list_servers(provided_project, all, verbose):
     (
         """List your Faculty servers."""
-        """\n\nIf you do not specify a project, all servers will be listed"""
+        """\n\nIf you do not specify a project, all servers will be listed."""
     )
     status_filter = None if all else ServerStatus.RUNNING
     if not provided_project:
