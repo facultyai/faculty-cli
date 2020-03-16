@@ -29,7 +29,6 @@ import textwrap
 import time
 import uuid
 from distutils.version import StrictVersion
-from collections import defaultdict
 import click
 import faculty
 import faculty.config
@@ -512,8 +511,8 @@ def server():
 )
 def list_servers(project, all, verbose):
     """List your Faculty servers.
-    
-    
+
+
     If you do not specify a project, all servers will be listed."""
     status_filter = None if all else ServerStatus.RUNNING
     if not project:
@@ -570,7 +569,6 @@ def list_servers(project, all, verbose):
             click.echo(server[2])
     elif not project and verbose:
         click.echo(tabulate(found_servers, headers, tablefmt="plain"))
-    
 
 
 @server.command(name="open")
