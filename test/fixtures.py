@@ -42,7 +42,7 @@ SHARED_SERVER = Server(
     resources=SHARED_RESOURCE,
     created_at=SERVER_CREATION_DATE,
     status=ServerStatus.RUNNING,
-    services=SERVICE,
+    services=[SERVICE],
 )
 DEDICATED_SERVER = Server(
     id=uuid.uuid4(),
@@ -53,5 +53,5 @@ DEDICATED_SERVER = Server(
     resources=DEDICATED_RESOURCE,
     created_at=SERVER_CREATION_DATE,
     status=ServerStatus.RUNNING,
-    services=SERVICE,
+    services=[SERVICE],
 )
