@@ -1,5 +1,5 @@
 import pytest
-from tabulate import tabulate
+
 from click.testing import CliRunner
 
 from faculty_cli.cli import cli, _server_spec
@@ -27,7 +27,37 @@ def mock_check_credentials(mocker):
 
 @pytest.fixture
 def mock_user_id(mocker):
-    mocker.patch("faculty_cli.auth.user_id", return_value=USER_ID)
+    mocker.patch("faculty_cli.cli._get_user_id", return_value=USER_ID)
+
+
+def test_no_servers_verbose(
+    mocker,
+    mock_update_check,
+    mock_check_credentials,
+    mock_profile,
+    mock_user_id,
+):
+    runner = CliRunner()
+    mocker.patch("faculty_cli.cli._list_projects", return_value=[PROJECT])
+    mocker.patch.object(ServerClient, "_get", return_value=[])
+    result = runner.invoke(cli, ["server", "list", "-v"])
+    assert result.exit_code == 0
+    assert result.output == "No servers.\n"
+
+
+def test_no_servers(
+    mocker,
+    mock_update_check,
+    mock_check_credentials,
+    mock_profile,
+    mock_user_id,
+):
+    runner = CliRunner()
+    mocker.patch("faculty_cli.cli._list_projects", return_value=[PROJECT])
+    mocker.patch.object(ServerClient, "_get", return_value=[])
+    result = runner.invoke(cli, ["server", "list"])
+    assert result.exit_code == 0
+    assert result.output == ""
 
 
 def test_list_all_servers(
@@ -43,15 +73,7 @@ def test_list_all_servers(
     mocker.patch.object(ServerClient, "_get", return_value=[DEDICATED_SERVER])
     result = runner.invoke(cli, ["server", "list"])
     assert result.exit_code == 0
-    assert (
-        result.output
-        == tabulate(
-            [(PROJECT.name, DEDICATED_SERVER.name)],
-            ("Project Name", "Server Name"),
-            tablefmt="plain",
-        )
-        + "\n"
-    )
+    assert result.output == DEDICATED_SERVER.name + "\n"
     ServerClient._get.assert_called_once_with(
         "/user/{}/instances".format(USER_ID), schema_mock.return_value
     )
@@ -67,41 +89,38 @@ def test_list_all_servers_verbose(
     runner = CliRunner()
     schema_mock = mocker.patch("faculty_cli.cli.ServerSchema")
     mocker.patch("faculty_cli.cli._list_projects", return_value=[PROJECT])
+    tabulate = mocker.patch("faculty_cli.cli.tabulate")
     mocker.patch.object(ServerClient, "_get", return_value=[DEDICATED_SERVER])
     result = runner.invoke(cli, ["server", "list", "--verbose"])
     assert result.exit_code == 0
-    assert (
-        result.output
-        == tabulate(
-            [
-                (
-                    PROJECT.name,
-                    PROJECT.id,
-                    DEDICATED_SERVER.name,
-                    DEDICATED_SERVER.type,
-                    DEDICATED_RESOURCE.node_type,
-                    "-",
-                    "-",
-                    DEDICATED_SERVER.status.value,
-                    DEDICATED_SERVER.id,
-                    DEDICATED_SERVER.created_at.strftime("%Y-%m-%d %H:%M"),
-                )
-            ],
+    tabulate.assert_called_once_with(
+        [
             (
-                "Project Name",
-                "Project ID",
-                "Server Name",
-                "Type",
-                "Machine Type",
-                "CPUs",
-                "RAM",
-                "Status",
-                "Server ID",
-                "Started",
-            ),
-            tablefmt="plain",
-        )
-        + "\n"
+                PROJECT.name,
+                PROJECT.id,
+                DEDICATED_SERVER.name,
+                DEDICATED_SERVER.type,
+                DEDICATED_RESOURCE.node_type,
+                "-",
+                "-",
+                DEDICATED_SERVER.status.value,
+                DEDICATED_SERVER.id,
+                DEDICATED_SERVER.created_at.strftime("%Y-%m-%d %H:%M"),
+            )
+        ],
+        (
+            "Project Name",
+            "Project ID",
+            "Server Name",
+            "Type",
+            "Machine Type",
+            "CPUs",
+            "RAM",
+            "Status",
+            "Server ID",
+            "Started",
+        ),
+        tablefmt="plain",
     )
     ServerClient._get.assert_called_once_with(
         "/user/{}/instances".format(USER_ID), schema_mock.return_value
@@ -142,38 +161,35 @@ def test_list_servers_verbose(
     schema_mock = mocker.patch("faculty.clients.server.ServerSchema")
     mocker.patch.object(ServerClient, "_get", return_value=[DEDICATED_SERVER])
     mocker.patch("faculty_cli.cli._resolve_project", return_value=PROJECT.id)
+    tabulate = mocker.patch("faculty_cli.cli.tabulate")
     result = runner.invoke(
         cli, ["server", "list", "{}".format(PROJECT.id), "--verbose"]
     )
     assert result.exit_code == 0
-    assert (
-        result.output
-        == tabulate(
-            [
-                (
-                    DEDICATED_SERVER.name,
-                    DEDICATED_SERVER.type,
-                    DEDICATED_RESOURCE.node_type,
-                    "-",
-                    "-",
-                    DEDICATED_SERVER.status.value,
-                    DEDICATED_SERVER.id,
-                    DEDICATED_SERVER.created_at.strftime("%Y-%m-%d %H:%M"),
-                )
-            ],
+    tabulate.assert_called_once_with(
+        [
             (
-                "Server Name",
-                "Type",
-                "Machine Type",
-                "CPUs",
-                "RAM",
-                "Status",
-                "Server ID",
-                "Started",
-            ),
-            tablefmt="plain",
-        )
-        + "\n"
+                DEDICATED_SERVER.name,
+                DEDICATED_SERVER.type,
+                DEDICATED_RESOURCE.node_type,
+                "-",
+                "-",
+                DEDICATED_SERVER.status.value,
+                DEDICATED_SERVER.id,
+                DEDICATED_SERVER.created_at.strftime("%Y-%m-%d %H:%M"),
+            )
+        ],
+        (
+            "Server Name",
+            "Type",
+            "Machine Type",
+            "CPUs",
+            "RAM",
+            "Status",
+            "Server ID",
+            "Started",
+        ),
+        tablefmt="plain",
     )
 
     ServerClient._get.assert_called_once_with(
