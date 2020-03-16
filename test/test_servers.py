@@ -27,7 +27,9 @@ def mock_check_credentials(mocker):
 
 @pytest.fixture
 def mock_user_id(mocker):
-    mocker.patch("faculty_cli.cli._get_user_id", return_value=USER_ID)
+    mocker.patch(
+        "faculty_cli.cli._get_authenticated_user_id", return_value=USER_ID
+    )
 
 
 def test_no_servers_verbose(
