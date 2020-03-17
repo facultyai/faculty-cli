@@ -17,7 +17,6 @@
 from __future__ import division
 
 import contextlib
-import json
 import operator
 import os
 import os.path
@@ -39,8 +38,7 @@ import faculty.clients.base
 from faculty.clients.server import (
     DedicatedServerResources,
     ServerStatus,
-    SharedServerResources,
-    SSHDetailsSchema,
+    SharedServerResources
 )
 from tabulate import tabulate
 
@@ -731,12 +729,10 @@ def ssh(project, server):
             stderr=subprocess.DEVNULL,
         )
     click.echo(
-        json.dumps(
-            {
-                key: value
-                for key, value in SSHDetailsSchema().dump(details).items()
-                if key != "key"
-            }
+        tabulate(
+            [(details.hostname, details.port, details.username)],
+            ("Host Name", "Port", "Username"),
+            tablefmt="plain",
         )
     )
 
