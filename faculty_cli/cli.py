@@ -731,7 +731,7 @@ def ssh(project, server):
     click.echo(
         tabulate(
             [(details.hostname, details.port, details.username)],
-            ("Host Name", "Port", "Username"),
+            ("Hostname", "Port", "Username"),
             tablefmt="plain",
         )
     )
