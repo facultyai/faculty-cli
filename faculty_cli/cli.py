@@ -255,6 +255,12 @@ def _resolve_server(project, server=None, ensure_running=True):
     return project_id, server_id
 
 
+def _get_ssh_details(project, server):
+    project_id, server_id = _resolve_server(project, server)
+    client = faculty.client("server")
+    return client.get_ssh_details(project_id, server_id)
+
+
 def _job_by_name(project_id, job_name):
     """Resolve a project ID and job name to a job ID."""
 
@@ -704,6 +710,33 @@ def instance_types(verbose):
             click.echo(type_.name)
 
 
+@server.command(name="add-to-ssh-agent")
+@click.argument("project")
+@click.argument("server")
+def ssh(project, server):
+    """
+    Add SSH private key for a Faculty server into the SSH authentication agent
+    and print the username, hostname and port.
+
+    After running this command, SSH into the server using
+    `ssh <username>@<hostname> -p <port>`.
+    """
+    details = _get_ssh_details(project, server)
+    with _save_key_to_file(details.key) as filename:
+        subprocess.run(
+            ["ssh-add", filename],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    click.echo(
+        tabulate(
+            [(details.hostname, details.port, details.username)],
+            ("Hostname", "Port", "Username"),
+            tablefmt="plain",
+        )
+    )
+
+
 @cli.command(context_settings={"ignore_unknown_options": True})
 @click.argument("project")
 @click.argument("server")
@@ -718,9 +751,7 @@ def shell(project, server, ssh_opts):
 
     """
 
-    project_id, server_id = _resolve_server(project, server)
-    client = faculty.client("server")
-    details = client.get_ssh_details(project_id, server_id)
+    details = _get_ssh_details(project, server)
 
     with _save_key_to_file(details.key) as filename:
         cmd = (
