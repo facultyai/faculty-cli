@@ -735,6 +735,15 @@ def ssh(project, server):
             tablefmt="plain",
         )
     )
+    click.echo(
+        "\n".join(
+            [
+                "",
+                "Connect to the server by:",
+                f"ssh {details.username}@{details.hostname} -p {details.port} -o UserKnownHostsFile={os.devnull} -o StrictHostKeyChecking=no",
+            ]
+        )
+    )
 
 
 @cli.command(context_settings={"ignore_unknown_options": True})
