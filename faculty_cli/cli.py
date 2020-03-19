@@ -740,7 +740,12 @@ def ssh(project, server):
             [
                 "",
                 "Connect to the server by:",
-                f"ssh {details.username}@{details.hostname} -p {details.port} -o UserKnownHostsFile={os.devnull} -o StrictHostKeyChecking=no",
+                "ssh {username}@{password} -p {port} -o UserKnownHostsFile={devnull} -o StrictHostKeyChecking=no".format(
+                    username=details.username,
+                    password=details.hostname,
+                    port=details.port,
+                    devnull=os.devnull,
+                ),
             ]
         )
     )
