@@ -737,9 +737,12 @@ def ssh(project, server):
     )
     click.echo(
         "\n"
-        + "Connect to the server by:\n"
-        + "ssh {}@{} -p {} -o UserKnownHostsFile={} -o StrictHostKeyChecking=no".format(
-            details.username, details.hostname, details.port, os.devnull
+        + "Login to the server with:\n"
+        + "ssh {}@{} -p {}".format(
+            details.username, details.hostname, details.port
+        )
+        + " -o UserKnownHostsFile={} -o StrictHostKeyChecking=no".format(
+            os.devnull
         )
     )
 
