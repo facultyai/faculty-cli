@@ -710,7 +710,7 @@ def instance_types(verbose):
             click.echo(type_.name)
 
 
-@server.command(name="ssh-details")
+@server.command()
 @click.argument("project")
 @click.argument("server")
 def ssh_details(project, server):
