@@ -714,7 +714,16 @@ def instance_types(verbose):
 @click.argument("project")
 @click.argument("server")
 def ssh_details(project, server):
-    """Echo the username, hostname and SSH port for a Faculty server. """
+    """Echo the username, hostname and SSH port for a Faculty server.
+
+    After running this command, SSH into the server using:
+
+    $ ssh <username>@<hostname> -p <port>
+
+    For this command to work, you will first need to add your public SSH key
+    to `~/.ssh/authorized_keys` on the Faculty Platform.
+
+    """
     details = _get_ssh_details(project, server)
     click.echo(
         tabulate(
