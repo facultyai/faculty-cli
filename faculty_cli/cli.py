@@ -710,24 +710,12 @@ def instance_types(verbose):
             click.echo(type_.name)
 
 
-@server.command(name="add-to-ssh-agent")
+@server.command(name="ssh-details")
 @click.argument("project")
 @click.argument("server")
-def ssh(project, server):
-    """
-    Add SSH private key for a Faculty server into the SSH authentication agent
-    and print the username, hostname and port.
-
-    After running this command, SSH into the server using
-    `ssh <username>@<hostname> -p <port>`.
-    """
+def ssh_details(project, server):
+    """Echo the username, hostname and SSH port for a Faculty server. """
     details = _get_ssh_details(project, server)
-    with _save_key_to_file(details.key) as filename:
-        subprocess.run(
-            ["ssh-add", filename],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
     click.echo(
         tabulate(
             [(details.hostname, details.port, details.username)],
