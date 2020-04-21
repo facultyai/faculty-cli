@@ -37,8 +37,7 @@ import faculty.clients.base
 from faculty.clients.server import (
     DedicatedServerResources,
     ServerStatus,
-    SharedServerResources,
-    ServerSchema,
+    SharedServerResources
 )
 from tabulate import tabulate
 
@@ -229,11 +228,10 @@ def _get_servers(project_id, name=None, status=None):
     return servers
 
 
-def _get_user_servers(user_id, status=None):
+def _list_user_servers(user_id, status=None):
     """List all servers owned by user."""
     client = faculty.client("server")
-    endpoint = "/user/{}/instances".format(user_id)
-    servers = client._get(endpoint, ServerSchema(many=True))
+    servers = client.list_for_user(user_id)
     if status is not None:
         servers = [s for s in servers if s.status == status]
     return servers
@@ -526,7 +524,7 @@ def list_servers(project, all, verbose):
         user_id = _get_authenticated_user_id()
         servers = [
             (server.project_id, projects[server.project_id], server)
-            for server in _get_user_servers(user_id, status=status_filter)
+            for server in _list_user_servers(user_id, status=status_filter)
         ]
     else:
         project_id = _resolve_project(project)

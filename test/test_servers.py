@@ -47,7 +47,7 @@ def test_no_servers_verbose(
     assert result.output == "No servers.\n"
 
 
-def test_no_servers(
+def test_list_all_servers_no_servers(
     mocker,
     mock_update_check,
     mock_check_credentials,
@@ -56,7 +56,7 @@ def test_no_servers(
 ):
     runner = CliRunner()
     mocker.patch("faculty_cli.cli._list_projects", return_value=[PROJECT])
-    mocker.patch.object(ServerClient, "_get", return_value=[])
+    mocker.patch("faculty_cli.cli._get_servers", return_value=[])
     result = runner.invoke(cli, ["server", "list"])
     assert result.exit_code == 0
     assert result.output == ""
@@ -71,14 +71,12 @@ def test_list_all_servers(
 ):
     runner = CliRunner()
     mocker.patch("faculty_cli.cli._list_projects", return_value=[PROJECT])
-    schema_mock = mocker.patch("faculty_cli.cli.ServerSchema")
-    mocker.patch.object(ServerClient, "_get", return_value=[DEDICATED_SERVER])
+    mocker.patch(
+        "faculty_cli.cli._list_user_servers", return_value=[DEDICATED_SERVER]
+    )
     result = runner.invoke(cli, ["server", "list"])
     assert result.exit_code == 0
     assert result.output == DEDICATED_SERVER.name + "\n"
-    ServerClient._get.assert_called_once_with(
-        "/user/{}/instances".format(USER_ID), schema_mock.return_value
-    )
 
 
 def test_list_all_servers_verbose(
@@ -89,10 +87,12 @@ def test_list_all_servers_verbose(
     mock_user_id,
 ):
     runner = CliRunner()
-    schema_mock = mocker.patch("faculty_cli.cli.ServerSchema")
     mocker.patch("faculty_cli.cli._list_projects", return_value=[PROJECT])
+    mocker.patch(
+        "faculty_cli.cli._list_user_servers", return_value=[DEDICATED_SERVER]
+    )
     tabulate = mocker.patch("faculty_cli.cli.tabulate")
-    mocker.patch.object(ServerClient, "_get", return_value=[DEDICATED_SERVER])
+
     result = runner.invoke(cli, ["server", "list", "--verbose"])
     assert result.exit_code == 0
     tabulate.assert_called_once_with(
@@ -124,9 +124,6 @@ def test_list_all_servers_verbose(
         ),
         tablefmt="plain",
     )
-    ServerClient._get.assert_called_once_with(
-        "/user/{}/instances".format(USER_ID), schema_mock.return_value
-    )
 
 
 def test_list_servers(
@@ -137,18 +134,13 @@ def test_list_servers(
     mock_user_id,
 ):
     runner = CliRunner()
-
-    schema_mock = mocker.patch("faculty.clients.server.ServerSchema")
-    mocker.patch.object(ServerClient, "_get", return_value=[DEDICATED_SERVER])
+    mocker.patch(
+        "faculty_cli.cli._get_servers", return_value=[DEDICATED_SERVER]
+    )
     mocker.patch("faculty_cli.cli._resolve_project", return_value=PROJECT.id)
     result = runner.invoke(cli, ["server", "list", "{}".format(PROJECT.id)])
     assert result.exit_code == 0
     assert result.output == DEDICATED_SERVER.name + "\n"
-    ServerClient._get.assert_called_once_with(
-        "/instance/{}".format(PROJECT.id),
-        schema_mock.return_value,
-        params=None,
-    )
 
 
 def test_list_servers_verbose(
@@ -161,7 +153,9 @@ def test_list_servers_verbose(
     runner = CliRunner()
 
     schema_mock = mocker.patch("faculty.clients.server.ServerSchema")
-    mocker.patch.object(ServerClient, "_get", return_value=[DEDICATED_SERVER])
+    mocker.patch(
+        "faculty_cli.cli._get_servers", return_value=[DEDICATED_SERVER]
+    )
     mocker.patch("faculty_cli.cli._resolve_project", return_value=PROJECT.id)
     tabulate = mocker.patch("faculty_cli.cli.tabulate")
     result = runner.invoke(
@@ -192,12 +186,6 @@ def test_list_servers_verbose(
             "Started",
         ),
         tablefmt="plain",
-    )
-
-    ServerClient._get.assert_called_once_with(
-        "/instance/{}".format(PROJECT.id),
-        schema_mock.return_value,
-        params=None,
     )
 
 
