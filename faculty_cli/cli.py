@@ -294,6 +294,11 @@ def _server_spec(server):
         memory_gb = "-"
     return machine_type, cpus, memory_gb
 
+def _get_ssh_details(project, server):
+    project_id, server_id = _resolve_server(project, server)
+    client = faculty.client("server")
+    return client.get_ssh_details(project_id, server_id)
+
 
 def _job_by_name(project_id, job_name):
     """Resolve a project ID and job name to a job ID."""
@@ -751,6 +756,30 @@ def instance_types(verbose):
             click.echo(type_.name)
 
 
+@server.command()
+@click.argument("project")
+@click.argument("server")
+def ssh_details(project, server):
+    """Echo the username, hostname and SSH port for a Faculty server.
+
+    After running this command, SSH into the server using:
+
+    $ ssh <username>@<hostname> -p <port>
+
+    For this command to work, you will first need to add your public SSH key
+    to `~/.ssh/authorized_keys` on the Faculty Platform.
+
+    """
+    details = _get_ssh_details(project, server)
+    click.echo(
+        tabulate(
+            [(details.hostname, details.port, details.username)],
+            ("Hostname", "Port", "Username"),
+            tablefmt="plain",
+        )
+    )
+
+
 @cli.command(context_settings={"ignore_unknown_options": True})
 @click.argument("project")
 @click.argument("server")
@@ -765,9 +794,7 @@ def shell(project, server, ssh_opts):
 
     """
 
-    project_id, server_id = _resolve_server(project, server)
-    client = faculty.client("server")
-    details = client.get_ssh_details(project_id, server_id)
+    details = _get_ssh_details(project, server)
 
     with _save_key_to_file(details.key) as filename:
         cmd = (
