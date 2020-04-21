@@ -294,6 +294,7 @@ def _server_spec(server):
         memory_gb = "-"
     return machine_type, cpus, memory_gb
 
+
 def _get_ssh_details(project, server):
     project_id, server_id = _resolve_server(project, server)
     client = faculty.client("server")
