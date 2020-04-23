@@ -32,17 +32,16 @@ def test_list_projects(
     mock_user_id,
 ):
     runner = CliRunner()
-    schema_mock = mocker.patch("faculty.clients.project.ProjectSchema")
-    mocker.patch.object(ProjectClient, "_get", return_value=[PROJECT])
+    mocker.patch.object(
+        ProjectClient, "list_accessible_by_user", return_value=[PROJECT]
+    )
 
     result = runner.invoke(cli, ["project", "list"])
 
     assert result.exit_code == 0
     assert result.output == PROJECT.name + "\n"
 
-    ProjectClient._get.assert_called_once_with(
-        "/user/{}".format(USER_ID), schema_mock.return_value
-    )
+    ProjectClient.list_accessible_by_user.assert_called_once_with(USER_ID)
 
 
 def test_list_projects_verbose(
@@ -53,8 +52,9 @@ def test_list_projects_verbose(
     mock_user_id,
 ):
     runner = CliRunner()
-    schema_mock = mocker.patch("faculty.clients.project.ProjectSchema")
-    mocker.patch.object(ProjectClient, "_get", return_value=[PROJECT])
+    mocker.patch.object(
+        ProjectClient, "list_accessible_by_user", return_value=[PROJECT]
+    )
 
     result = runner.invoke(cli, ["project", "list", "-v"])
 
@@ -63,9 +63,7 @@ def test_list_projects_verbose(
     assert result.exit_code == 0
     assert result.output == tpl.format(PROJECT.name, PROJECT.id)
 
-    ProjectClient._get.assert_called_once_with(
-        "/user/{}".format(USER_ID), schema_mock.return_value
-    )
+    ProjectClient.list_accessible_by_user.assert_called_once_with(USER_ID)
 
 
 def test_create_project(
