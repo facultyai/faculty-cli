@@ -41,6 +41,7 @@ def test_no_servers_verbose(
 ):
     runner = CliRunner()
     mocker.patch("faculty_cli.cli._list_projects", return_value=[PROJECT])
+    mocker.patch("faculty_cli.cli._list_user_servers", return_value=[])
     mocker.patch.object(ServerClient, "_get", return_value=[])
     result = runner.invoke(cli, ["server", "list", "-v"])
     assert result.exit_code == 0
@@ -56,7 +57,7 @@ def test_list_all_servers_no_servers(
 ):
     runner = CliRunner()
     mocker.patch("faculty_cli.cli._list_projects", return_value=[PROJECT])
-    mocker.patch("faculty_cli.cli._get_servers", return_value=[])
+    mocker.patch("faculty_cli.cli._list_user_servers", return_value=[])
     result = runner.invoke(cli, ["server", "list"])
     assert result.exit_code == 0
     assert result.output == ""
@@ -151,8 +152,6 @@ def test_list_servers_verbose(
     mock_user_id,
 ):
     runner = CliRunner()
-
-    schema_mock = mocker.patch("faculty.clients.server.ServerSchema")
     mocker.patch(
         "faculty_cli.cli._get_servers", return_value=[DEDICATED_SERVER]
     )
