@@ -37,7 +37,7 @@ import faculty.clients.base
 from faculty.clients.server import (
     DedicatedServerResources,
     ServerStatus,
-    SharedServerResources
+    SharedServerResources,
 )
 from tabulate import tabulate
 
