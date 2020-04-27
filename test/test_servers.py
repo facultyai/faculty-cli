@@ -1,5 +1,3 @@
-import pytest
-
 from click.testing import CliRunner
 
 from faculty_cli.cli import cli, _server_spec
@@ -11,25 +9,7 @@ from test.fixtures import (
     DEDICATED_SERVER,
     DEDICATED_RESOURCE,
     SHARED_RESOURCE,
-    USER_ID,
 )
-
-
-@pytest.fixture
-def mock_update_check(mocker):
-    mocker.patch("faculty_cli.update.check_for_new_release")
-
-
-@pytest.fixture
-def mock_check_credentials(mocker):
-    mocker.patch("faculty_cli.cli._check_credentials")
-
-
-@pytest.fixture
-def mock_user_id(mocker):
-    mocker.patch(
-        "faculty_cli.cli._get_authenticated_user_id", return_value=USER_ID
-    )
 
 
 def test_no_servers_verbose(
@@ -100,7 +80,6 @@ def test_list_all_servers_verbose(
         [
             (
                 PROJECT.name,
-                PROJECT.id,
                 DEDICATED_SERVER.name,
                 DEDICATED_SERVER.type,
                 DEDICATED_RESOURCE.node_type,
@@ -113,7 +92,6 @@ def test_list_all_servers_verbose(
         ],
         (
             "Project Name",
-            "Project ID",
             "Server Name",
             "Type",
             "Machine Type",

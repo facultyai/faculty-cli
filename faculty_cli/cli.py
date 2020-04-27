@@ -184,7 +184,6 @@ def _get_authenticated_user_id():
 
 def _list_projects():
     """List all projects accessible by user."""
-    _check_credentials()
     client = faculty.client("project")
     user_id = _get_authenticated_user_id()
     projects = client.list_accessible_by_user(user_id)
@@ -459,6 +458,7 @@ def project():
 )
 def list_projects(verbose):
     """List accessible Faculty projects."""
+    _check_credentials()
     projects = _list_projects()
     if verbose:
         if not projects:
@@ -516,27 +516,25 @@ def server():
 def list_servers(project, all, verbose):
     """List your Faculty servers.
 
-
     If you do not specify a project, all servers will be listed."""
     status_filter = None if all else ServerStatus.RUNNING
     if not project:
         projects = {project.id: project.name for project in _list_projects()}
         user_id = _get_authenticated_user_id()
         servers = [
-            (server.project_id, projects[server.project_id], server)
+            (projects[server.project_id], server)
             for server in _list_user_servers(user_id, status=status_filter)
         ]
     else:
         project_id = _resolve_project(project)
         servers = [
-            (project_id, "", server)
+            ("", server)
             for server in _get_servers(project_id, status=status_filter)
         ]
 
     status_filter = None if all else ServerStatus.RUNNING
     headers = (
         "Project Name",
-        "Project ID",
         "Server Name",
         "Type",
         "Machine Type",
@@ -547,12 +545,11 @@ def list_servers(project, all, verbose):
         "Started",
     )
     found_servers = []
-    for project_id, project_name, server in servers:
+    for project_name, server in servers:
         machine_type, cpus, memory_gb = _server_spec(server)
         found_servers.append(
             (
                 project_name,
-                project_id,
                 server.name,
                 server.type,
                 machine_type,
@@ -566,11 +563,11 @@ def list_servers(project, all, verbose):
     if not found_servers and verbose:
         click.echo("No servers.")
     elif project and verbose:
-        servers = [server[2:] for server in found_servers]
-        click.echo(tabulate(servers, headers[2:], tablefmt="plain"))
+        servers = [server[1:] for server in found_servers]
+        click.echo(tabulate(servers, headers[1:], tablefmt="plain"))
     elif project or not verbose:
         for server in found_servers:
-            click.echo(server[2])
+            click.echo(server[1])
     elif not project and verbose:
         click.echo(tabulate(found_servers, headers, tablefmt="plain"))
 
