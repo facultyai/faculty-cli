@@ -32,7 +32,7 @@ def mock_user_id(mocker):
     )
 
 
-def test_no_servers_verbose(
+def test_list_all_servers_no_servers_verbose(
     mocker,
     mock_update_check,
     mock_check_credentials,
