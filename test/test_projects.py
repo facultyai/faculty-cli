@@ -17,13 +17,6 @@ def mock_check_credentials(mocker):
     mocker.patch("faculty_cli.cli._check_credentials")
 
 
-@pytest.fixture
-def mock_user_id(mocker):
-    mocker.patch(
-        "faculty_cli.cli._get_authenticated_user_id", return_value=USER_ID
-    )
-
-
 def test_list_projects(
     mocker,
     mock_update_check,
