@@ -1367,7 +1367,10 @@ def dataset_put(project, local_path, project_path):
     project_id = _resolve_project(project)
     try:
         faculty.datasets.put(local_path, project_path, project_id=project_id)
-    except (faculty.clients.object.PathAlreadyExists, FileNotFoundError) as err:
+    except (
+        faculty.clients.object.PathAlreadyExists,
+        FileNotFoundError,
+    ) as err:
         _print_and_exit(err, 64)
 
 
@@ -1390,26 +1393,47 @@ def mv(project, source_path, destination_path):
 @click.argument("project")
 @click.argument("source_path")
 @click.argument("destination_path")
-def cp(project, source_path, destination_path):
+@click.option(
+    "--recursive",
+    is_flag=True,
+    help="Copy directories like a recursive copy in a filesystem",
+)
+def cp(project, source_path, destination_path, recursive):
     """Copy a file within a project's datasets."""
     project_id = _resolve_project(project)
     try:
         faculty.datasets.cp(
-            source_path, destination_path, project_id=project_id
+            source_path,
+            destination_path,
+            project_id=project_id,
+            recursive=recursive,
         )
-    except faculty.clients.object.PathNotFound as err:
+    except (
+        faculty.clients.object.PathNotFound,
+        faculty.clients.object.SourceIsADirectory,
+    ) as err:
         _print_and_exit(err, 64)
 
 
 @dataset.command()
 @click.argument("project")
 @click.argument("project_path")
-def rm(project, project_path):
+@click.option(
+    "--recursive",
+    is_flag=True,
+    help="Deleting directories like a recursive delete in a filesystem",
+)
+def rm(project, project_path, recursive):
     """Remove a file from the project's datasets."""
     project_id = _resolve_project(project)
     try:
-        faculty.datasets.rm(project_path, project_id=project_id)
-    except faculty.clients.object.PathNotFound as err:
+        faculty.datasets.rm(
+            project_path, project_id=project_id, recursive=recursive
+        )
+    except (
+        faculty.clients.object.PathNotFound,
+        faculty.clients.object.TargetIsADirectory,
+    ) as err:
         _print_and_exit(err, 64)
 
 
