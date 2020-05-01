@@ -29,7 +29,6 @@ import textwrap
 import time
 import uuid
 from distutils.version import StrictVersion
-
 import click
 import faculty
 import faculty.config
@@ -50,6 +49,7 @@ import faculty_cli.parse
 import faculty_cli.shell
 import faculty_cli.update
 import faculty_cli.version
+
 
 SSH_OPTIONS = [
     "-o",
@@ -177,29 +177,44 @@ def _check_credentials():
         _check_creds_file_perms()
 
 
+def _get_authenticated_user_id():
+    client = faculty.client("account")
+    return client.authenticated_user_id()
+
+
+def _list_projects():
+    """List all projects accessible by user."""
+    client = faculty.client("project")
+    user_id = _get_authenticated_user_id()
+    projects = client.list_accessible_by_user(user_id)
+    return projects
+
+
+def _match_project(project):
+    """Find a project by matching its name."""
+    projects = _list_projects()
+    matching_projects = [p for p in projects if p.name == project]
+    if len(matching_projects) == 1:
+        project = matching_projects[0]
+    else:
+        if not matching_projects:
+            msg = 'no project of name "{}" found'.format(project)
+            raise NameNotFoundError(msg)
+        else:
+            msg = (
+                'more than one project of name "{}", please select by '
+                "project ID instead"
+            ).format(project)
+            raise AmbiguousNameError(msg)
+    return project.id
+
+
 def _resolve_project(project):
     """Resolve a project name or ID to a project ID."""
     try:
         project_id = uuid.UUID(project)
     except ValueError:
-        account_client = faculty.client("account")
-        user_id = account_client.authenticated_user_id()
-
-        project_client = faculty.client("project")
-        projects = project_client.list_accessible_by_user(user_id)
-        matching_projects = [p for p in projects if p.name == project]
-        if len(matching_projects) == 1:
-            project_id = matching_projects[0].id
-        else:
-            if not matching_projects:
-                msg = 'no project of name "{}" found'.format(project)
-                raise NameNotFoundError(msg)
-            else:
-                msg = (
-                    'more than one project of name "{}", please select by '
-                    "project ID instead"
-                ).format(project)
-                raise AmbiguousNameError(msg)
+        project_id = _match_project(project)
     return project_id
 
 
@@ -207,6 +222,15 @@ def _get_servers(project_id, name=None, status=None):
     """List servers in the given project."""
     client = faculty.client("server")
     servers = client.list(project_id, name)
+    if status is not None:
+        servers = [s for s in servers if s.status == status]
+    return servers
+
+
+def _list_user_servers(user_id, status=None):
+    """List all servers owned by user."""
+    client = faculty.client("server")
+    servers = client.list_for_user(user_id)
     if status is not None:
         servers = [s for s in servers if s.status == status]
     return servers
@@ -255,6 +279,19 @@ def _resolve_server(project, server=None, ensure_running=True):
     return project_id, server_id
 
 
+def _server_spec(server):
+    """Return formatted strings for machine type, cpu and memory of server."""
+    if isinstance(server.resources, SharedServerResources):
+        machine_type = "-"
+        cpus = "{:.3g}".format(server.resources.milli_cpus / 1000)
+        memory_gb = "{:.3g}GB".format(server.resources.memory_mb / 1000)
+    else:
+        machine_type = server.resources.node_type
+        cpus = "-"
+        memory_gb = "-"
+    return machine_type, cpus, memory_gb
+
+
 def _get_ssh_details(project, server):
     project_id, server_id = _resolve_server(project, server)
     client = faculty.client("server")
@@ -263,7 +300,6 @@ def _get_ssh_details(project, server):
 
 def _job_by_name(project_id, job_name):
     """Resolve a project ID and job name to a job ID."""
-
     client = faculty.client("job")
     jobs = client.list(project_id)
     matching_jobs = [job for job in jobs if job.metadata.name == job_name]
@@ -423,9 +459,7 @@ def project():
 def list_projects(verbose):
     """List accessible Faculty projects."""
     _check_credentials()
-    client = faculty.client("project")
-    user_id = faculty_cli.auth.user_id()
-    projects = client.list_accessible_by_user(user_id)
+    projects = _list_projects()
     if verbose:
         if not projects:
             click.echo("No projects.")
@@ -447,7 +481,7 @@ def list_projects(verbose):
 def new_project(name):
     """Create new project."""
     client = faculty.client("project")
-    user_id = faculty_cli.auth.user_id()
+    user_id = _get_authenticated_user_id()
     try:
         returned_project = client.create(user_id, name)
     except faculty.clients.base.BadRequest as err:
@@ -466,7 +500,7 @@ def server():
 
 
 @server.command(name="list")
-@click.argument("project")
+@click.argument("project", required=False, metavar="PROJECT")
 @click.option(
     "-a",
     "--all",
@@ -480,54 +514,62 @@ def server():
     help="Print extra information about servers.",
 )
 def list_servers(project, all, verbose):
-    """List your Faculty servers."""
-    project_id = _resolve_project(project)
+    """List your Faculty servers.
+
+    If you do not specify a project, all servers will be listed."""
+    status_filter = None if all else ServerStatus.RUNNING
+    if not project:
+        projects = {project.id: project.name for project in _list_projects()}
+        user_id = _get_authenticated_user_id()
+        servers = [
+            (projects[server.project_id], server)
+            for server in _list_user_servers(user_id, status=status_filter)
+        ]
+    else:
+        project_id = _resolve_project(project)
+        servers = [
+            ("", server)
+            for server in _get_servers(project_id, status=status_filter)
+        ]
 
     status_filter = None if all else ServerStatus.RUNNING
-    servers = _get_servers(project_id, status=status_filter)
-
-    if verbose:
-        if not servers:
-            click.echo("No servers.")
-        else:
-            headers = (
-                "Server Name",
-                "Type",
-                "Machine Type",
-                "CPUs",
-                "RAM",
-                "Status",
-                "ID",
-                "Started",
+    headers = (
+        "Project Name",
+        "Server Name",
+        "Type",
+        "Machine Type",
+        "CPUs",
+        "RAM",
+        "Status",
+        "Server ID",
+        "Started",
+    )
+    found_servers = []
+    for project_name, server in servers:
+        machine_type, cpus, memory_gb = _server_spec(server)
+        found_servers.append(
+            (
+                project_name,
+                server.name,
+                server.type,
+                machine_type,
+                cpus,
+                memory_gb,
+                server.status.value,
+                server.id,
+                server.created_at.strftime("%Y-%m-%d %H:%M"),
             )
-            rows = []
-            for server in servers:
-                if isinstance(server.resources, SharedServerResources):
-                    machine_type = "-"
-                    cpus = "{:.3g}".format(server.resources.milli_cpus / 1000)
-                    memory_gb = "{:.3g}GB".format(
-                        server.resources.memory_mb / 1000
-                    )
-                else:
-                    machine_type = server.resources.node_type
-                    cpus = "-"
-                    memory_gb = "-"
-                rows.append(
-                    (
-                        server.name,
-                        server.type,
-                        machine_type,
-                        cpus,
-                        memory_gb,
-                        server.status.value,
-                        server.id,
-                        server.created_at.strftime("%Y-%m-%d %H:%M"),
-                    )
-                )
-            click.echo(tabulate(rows, headers, tablefmt="plain"))
-    else:
-        for server in servers:
-            click.echo(server.name)
+        )
+    if not found_servers and verbose:
+        click.echo("No servers.")
+    elif project and verbose:
+        servers = [server[1:] for server in found_servers]
+        click.echo(tabulate(servers, headers[1:], tablefmt="plain"))
+    elif project or not verbose:
+        for server in found_servers:
+            click.echo(server[1])
+    elif not project and verbose:
+        click.echo(tabulate(found_servers, headers, tablefmt="plain"))
 
 
 @server.command(name="open")
