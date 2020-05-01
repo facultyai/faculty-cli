@@ -52,9 +52,7 @@ def test_dataset_get_source_not_found(mocker, mock_resolve_project):
     )
 
 
-@pytest.mark.parametrize(
-    "exception", [FileNotFoundError, NotADirectoryError, OSError]
-)
+@pytest.mark.parametrize("exception", [EnvironmentError, OSError])
 def test_dataset_get_bad_request(mocker, mock_resolve_project, exception):
 
     mocker.patch("faculty.datasets.get", side_effect=exception)
@@ -99,7 +97,7 @@ def test_dataset_put_dest_already_exists(mocker, mock_resolve_project):
 
 def test_dataset_put_source_not_found(mocker, mock_resolve_project):
 
-    exception = FileNotFoundError(
+    exception = EnvironmentError(
         "[Errno 2] No such file or directory: 'source'"
     )
     mocker.patch("faculty.datasets.put", side_effect=exception)
