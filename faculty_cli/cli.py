@@ -1407,25 +1407,10 @@ def cp(project, source_path, destination_path):
 def rm(project, project_path):
     """Remove a file from the project's datasets."""
     project_id = _resolve_project(project)
-    faculty.datasets.rm(project_path, project_id=str(project_id))
-
-
-@dataset.command()
-@click.argument("project")
-@click.argument("project_path")
-def rmdir(project, project_path):
-    """Remove a directory from the project's datasets."""
-    project_id = _resolve_project(project)
-    faculty.datasets.rmdir(project_path, project_id=str(project_id))
-
-
-@dataset.command()
-@click.argument("project")
-@click.argument("project_path")
-def etag(project, project_path):
-    """Get a unique identifier for the current version of a file."""
-    project_id = _resolve_project(project)
-    click.echo(faculty.datasets.etag(project_path, project_id=str(project_id)))
+    try:
+        faculty.datasets.rm(project_path, project_id=project_id)
+    except faculty.clients.object.PathNotFound as err:
+        _print_and_exit(err, 64)
 
 
 @dataset.command(name="ls")
