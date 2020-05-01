@@ -1427,6 +1427,6 @@ def dataset_ls(project, prefix, show_hidden):
     """List contents of project datasets."""
     project_id = _resolve_project(project)
     for item in faculty.datasets.ls(
-        prefix, project_id=str(project_id), show_hidden=show_hidden
+        prefix, project_id=project_id, show_hidden=show_hidden
     ):
         click.echo(item)
