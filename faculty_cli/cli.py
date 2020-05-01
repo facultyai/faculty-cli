@@ -1350,7 +1350,12 @@ def dataset():
 def dataset_get(project, project_path, local_path):
     """Copy from a project's datasets to the local filesystem."""
     project_id = _resolve_project(project)
-    faculty.datasets.get(project_path, local_path, project_id=str(project_id))
+    try:
+        faculty.datasets.get(project_path, local_path, project_id=project_id)
+    except faculty.datasets.util.DatasetsError as err:
+        _print_and_exit(str(err).replace(str(project_id), project), 64)
+    except (FileNotFoundError, NotADirectoryError, OSError) as err:
+        _print_and_exit(err, 64)
 
 
 @dataset.command(name="put")
@@ -1360,7 +1365,10 @@ def dataset_get(project, project_path, local_path):
 def dataset_put(project, local_path, project_path):
     """Copy from the local filesystem to a project's datasets."""
     project_id = _resolve_project(project)
-    faculty.datasets.put(local_path, project_path, project_id=str(project_id))
+    try:
+        faculty.datasets.put(local_path, project_path, project_id=project_id)
+    except (faculty.clients.object.PathAlreadyExists, FileNotFoundError) as err:
+        _print_and_exit(err, 64)
 
 
 @dataset.command()
@@ -1370,9 +1378,12 @@ def dataset_put(project, local_path, project_path):
 def mv(project, source_path, destination_path):
     """Move a file within a project's datasets."""
     project_id = _resolve_project(project)
-    faculty.datasets.mv(
-        source_path, destination_path, project_id=str(project_id)
-    )
+    try:
+        faculty.datasets.mv(
+            source_path, destination_path, project_id=project_id
+        )
+    except faculty.clients.object.PathNotFound as err:
+        _print_and_exit(err, 64)
 
 
 @dataset.command()
@@ -1382,9 +1393,12 @@ def mv(project, source_path, destination_path):
 def cp(project, source_path, destination_path):
     """Copy a file within a project's datasets."""
     project_id = _resolve_project(project)
-    faculty.datasets.cp(
-        source_path, destination_path, project_id=str(project_id)
-    )
+    try:
+        faculty.datasets.cp(
+            source_path, destination_path, project_id=project_id
+        )
+    except faculty.clients.object.PathNotFound as err:
+        _print_and_exit(err, 64)
 
 
 @dataset.command()
