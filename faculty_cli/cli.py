@@ -1354,7 +1354,7 @@ def dataset_get(project, project_path, local_path):
         faculty.datasets.get(project_path, local_path, project_id=project_id)
     except faculty.datasets.util.DatasetsError as err:
         _print_and_exit(str(err).replace(str(project_id), project), 64)
-    except (EnvironmentError, OSError) as err:
+    except OSError as err:
         _print_and_exit(err, 64)
 
 
@@ -1367,7 +1367,7 @@ def dataset_put(project, local_path, project_path):
     project_id = _resolve_project(project)
     try:
         faculty.datasets.put(local_path, project_path, project_id=project_id)
-    except (faculty.clients.object.PathAlreadyExists, EnvironmentError) as err:
+    except (faculty.clients.object.PathAlreadyExists, OSError) as err:
         _print_and_exit(err, 64)
 
 
