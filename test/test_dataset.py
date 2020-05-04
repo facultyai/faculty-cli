@@ -29,31 +29,24 @@ def test_dataset_get(mocker, mock_resolve_project):
     )
 
 
-def test_dataset_get_source_not_found(mocker, mock_resolve_project):
-
-    mocker.patch(
-        "faculty.datasets.get",
-        side_effect=faculty.datasets.util.DatasetsError(
-            "No such object missing-source in project {}".format(
-                mock_resolve_project.return_value
-            )
+@pytest.mark.parametrize(
+    "exception, message",
+    [
+        (
+            faculty.datasets.util.DatasetsError(
+                "No such object source in project {}".format(PROJECT.id)
+            ),
+            "No such object source in project test-project",
         ),
-    )
-
-    runner = CliRunner()
-    result = runner.invoke(
-        cli, ["dataset", "get", "test-project", "missing-source", "dest"]
-    )
-
-    assert result.exit_code == 64
-    assert (
-        result.output
-        == "No such object missing-source in project test-project\n"
-    )
-
-
-@pytest.mark.parametrize("exception", [EnvironmentError, OSError])
-def test_dataset_get_bad_request(mocker, mock_resolve_project, exception):
+        (
+            OSError("[Errno 2] No such file or directory: 'dest'"),
+            "[Errno 2] No such file or directory: 'dest'",
+        ),
+    ],
+)
+def test_dataset_get_exception(
+    mocker, mock_resolve_project, exception, message
+):
 
     mocker.patch("faculty.datasets.get", side_effect=exception)
 
@@ -63,6 +56,7 @@ def test_dataset_get_bad_request(mocker, mock_resolve_project, exception):
     )
 
     assert result.exit_code == 64
+    assert result.output == "{}\n".format(message)
 
 
 def test_dataset_put(mocker, mock_resolve_project):
@@ -81,25 +75,15 @@ def test_dataset_put(mocker, mock_resolve_project):
     )
 
 
-def test_dataset_put_dest_already_exists(mocker, mock_resolve_project):
+@pytest.mark.parametrize(
+    "exception",
+    [
+        faculty.clients.object.PathAlreadyExists("dest"),
+        OSError("[Errno 2] No such file or directory: 'source'"),
+    ],
+)
+def test_dataset_put_exception(mocker, mock_resolve_project, exception):
 
-    exception = faculty.clients.object.PathAlreadyExists("dest")
-    mocker.patch("faculty.datasets.put", side_effect=exception)
-
-    runner = CliRunner()
-    result = runner.invoke(
-        cli, ["dataset", "put", "test-project", "source", "dest"]
-    )
-
-    assert result.exit_code == 64
-    assert result.output == "{}\n".format(exception)
-
-
-def test_dataset_put_source_not_found(mocker, mock_resolve_project):
-
-    exception = EnvironmentError(
-        "[Errno 2] No such file or directory: 'source'"
-    )
     mocker.patch("faculty.datasets.put", side_effect=exception)
 
     runner = CliRunner()
@@ -187,35 +171,20 @@ def test_dataset_cp_recursive(mocker, mock_resolve_project):
     )
 
 
-def test_dataset_cp_source_not_found(mocker, mock_resolve_project):
+@pytest.mark.parametrize(
+    "exception",
+    [
+        faculty.clients.object.PathNotFound("source"),
+        faculty.clients.object.SourceIsADirectory("source"),
+    ],
+)
+def test_dataset_cp_exception(mocker, mock_resolve_project, exception):
 
-    exception = faculty.clients.object.PathNotFound("source")
     mocker.patch("faculty.datasets.cp", side_effect=exception)
 
     runner = CliRunner()
     result = runner.invoke(
         cli, ["dataset", "cp", "test-project", "source", "dest"]
-    )
-
-    assert result.exit_code == 64
-    assert result.output == "{}\n".format(exception)
-
-
-def test_dataset_cp_source_is_directory(mocker, mock_resolve_project):
-
-    exception = faculty.clients.object.SourceIsADirectory("source-directory")
-    mocker.patch("faculty.datasets.cp", side_effect=exception)
-
-    runner = CliRunner()
-    result = runner.invoke(
-        cli,
-        [
-            "dataset",
-            "cp",
-            "test-project",
-            "source-directory",
-            "dest-directory",
-        ],
     )
 
     assert result.exit_code == 64
@@ -254,25 +223,20 @@ def test_dataset_rm_recursive(mocker, mock_resolve_project):
     )
 
 
-def test_dataset_rm_object_not_found(mocker, mock_resolve_project):
+@pytest.mark.parametrize(
+    "exception",
+    [
+        faculty.clients.object.PathNotFound("object"),
+        faculty.clients.object.TargetIsADirectory("object"),
+    ],
+)
+def test_dataset_rm_exception(mocker, mock_resolve_project, exception):
 
     exception = faculty.clients.object.PathNotFound("object")
     mocker.patch("faculty.datasets.rm", side_effect=exception)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["dataset", "rm", "test-project", "object"])
-
-    assert result.exit_code == 64
-    assert result.output == "{}\n".format(exception)
-
-
-def test_dataset_rm_object_is_directory(mocker, mock_resolve_project):
-
-    exception = faculty.clients.object.TargetIsADirectory("directory")
-    mocker.patch("faculty.datasets.rm", side_effect=exception)
-
-    runner = CliRunner()
-    result = runner.invoke(cli, ["dataset", "rm", "test-project", "directory"])
 
     assert result.exit_code == 64
     assert result.output == "{}\n".format(exception)
