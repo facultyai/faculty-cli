@@ -34,6 +34,7 @@ import faculty
 import faculty.config
 import requests
 import faculty.clients.base
+import faculty.datasets
 from faculty.clients.server import (
     DedicatedServerResources,
     ServerStatus,
@@ -1334,3 +1335,119 @@ def ls(project, path):
             click.echo("/project{}/".format(item.path))
         else:
             click.echo("/project{}".format(item.path))
+
+
+@cli.group()
+def dataset():
+    """Manipulate files in Faculty datasets."""
+    pass
+
+
+@dataset.command(name="get")
+@click.argument("project")
+@click.argument("project_path")
+@click.argument("local_path")
+def dataset_get(project, project_path, local_path):
+    """Copy from a project's datasets to the local filesystem."""
+    project_id = _resolve_project(project)
+    try:
+        faculty.datasets.get(project_path, local_path, project_id=project_id)
+    except faculty.datasets.util.DatasetsError as err:
+        _print_and_exit(str(err).replace(str(project_id), project), 64)
+    except OSError as err:
+        _print_and_exit(err, 64)
+
+
+@dataset.command(name="put")
+@click.argument("project")
+@click.argument("local_path")
+@click.argument("project_path")
+def dataset_put(project, local_path, project_path):
+    """Copy from the local filesystem to a project's datasets."""
+    project_id = _resolve_project(project)
+    try:
+        faculty.datasets.put(local_path, project_path, project_id=project_id)
+    except (faculty.clients.object.PathAlreadyExists, OSError) as err:
+        _print_and_exit(err, 64)
+
+
+@dataset.command()
+@click.argument("project")
+@click.argument("source_path")
+@click.argument("destination_path")
+def mv(project, source_path, destination_path):
+    """Move a file within a project's datasets."""
+    project_id = _resolve_project(project)
+    try:
+        faculty.datasets.mv(
+            source_path, destination_path, project_id=project_id
+        )
+    except faculty.clients.object.PathNotFound as err:
+        _print_and_exit(err, 64)
+
+
+@dataset.command()
+@click.argument("project")
+@click.argument("source_path")
+@click.argument("destination_path")
+@click.option(
+    "--recursive",
+    is_flag=True,
+    help="Copy directories like a recursive copy in a filesystem",
+)
+def cp(project, source_path, destination_path, recursive):
+    """Copy a file within a project's datasets."""
+    project_id = _resolve_project(project)
+    try:
+        faculty.datasets.cp(
+            source_path,
+            destination_path,
+            project_id=project_id,
+            recursive=recursive,
+        )
+    except (
+        faculty.clients.object.PathNotFound,
+        faculty.clients.object.SourceIsADirectory,
+    ) as err:
+        _print_and_exit(err, 64)
+
+
+@dataset.command()
+@click.argument("project")
+@click.argument("project_path")
+@click.option(
+    "--recursive",
+    is_flag=True,
+    help="Deleting directories like a recursive delete in a filesystem",
+)
+def rm(project, project_path, recursive):
+    """Remove a file from the project's datasets."""
+    project_id = _resolve_project(project)
+    try:
+        faculty.datasets.rm(
+            project_path, project_id=project_id, recursive=recursive
+        )
+    except (
+        faculty.clients.object.PathNotFound,
+        faculty.clients.object.TargetIsADirectory,
+    ) as err:
+        _print_and_exit(err, 64)
+
+
+@dataset.command(name="ls")
+@click.argument("project")
+@click.option(
+    "--prefix",
+    default="/",
+    help="List only files in the datasets matching this prefix.",
+)
+@click.option(
+    "--show-hidden", is_flag=True, help="Include hidden files in the output."
+)
+def dataset_ls(project, prefix, show_hidden):
+    """List contents of project datasets."""
+    project_id = _resolve_project(project)
+    for item in faculty.datasets.ls(
+        prefix, project_id=project_id, show_hidden=show_hidden
+    ):
+        click.echo(item)
