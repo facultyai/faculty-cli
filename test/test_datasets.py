@@ -13,13 +13,13 @@ def mock_resolve_project(mocker):
     )
 
 
-def test_dataset_get(mocker, mock_resolve_project):
+def test_datasets_get(mocker, mock_resolve_project):
 
     mock_get = mocker.patch("faculty.datasets.get")
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["dataset", "get", "test-project", "source", "dest"]
+        cli, ["datasets", "get", "test-project", "source", "dest"]
     )
     assert result.exit_code == 0
 
@@ -44,7 +44,7 @@ def test_dataset_get(mocker, mock_resolve_project):
         ),
     ],
 )
-def test_dataset_get_exception(
+def test_datasets_get_exception(
     mocker, mock_resolve_project, exception, message
 ):
 
@@ -52,20 +52,20 @@ def test_dataset_get_exception(
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["dataset", "get", "test-project", "source", "dest"]
+        cli, ["datasets", "get", "test-project", "source", "dest"]
     )
 
     assert result.exit_code == 64
     assert result.output == "{}\n".format(message)
 
 
-def test_dataset_put(mocker, mock_resolve_project):
+def test_datasets_put(mocker, mock_resolve_project):
 
     mock_put = mocker.patch("faculty.datasets.put")
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["dataset", "put", "test-project", "source", "dest"]
+        cli, ["datasets", "put", "test-project", "source", "dest"]
     )
     assert result.exit_code == 0
 
@@ -82,26 +82,26 @@ def test_dataset_put(mocker, mock_resolve_project):
         OSError("[Errno 2] No such file or directory: 'source'"),
     ],
 )
-def test_dataset_put_exception(mocker, mock_resolve_project, exception):
+def test_datasets_put_exception(mocker, mock_resolve_project, exception):
 
     mocker.patch("faculty.datasets.put", side_effect=exception)
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["dataset", "put", "test-project", "source", "dest"]
+        cli, ["datasets", "put", "test-project", "source", "dest"]
     )
 
     assert result.exit_code == 64
     assert result.output == "{}\n".format(exception)
 
 
-def test_dataset_mv(mocker, mock_resolve_project):
+def test_datasets_mv(mocker, mock_resolve_project):
 
     mock_mv = mocker.patch("faculty.datasets.mv")
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["dataset", "mv", "test-project", "source", "dest"]
+        cli, ["datasets", "mv", "test-project", "source", "dest"]
     )
     assert result.exit_code == 0
 
@@ -111,27 +111,27 @@ def test_dataset_mv(mocker, mock_resolve_project):
     )
 
 
-def test_dataset_mv_source_not_found(mocker, mock_resolve_project):
+def test_datasets_mv_source_not_found(mocker, mock_resolve_project):
 
     exception = faculty.clients.object.PathNotFound("source")
     mocker.patch("faculty.datasets.mv", side_effect=exception)
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["dataset", "mv", "test-project", "source", "dest"]
+        cli, ["datasets", "mv", "test-project", "source", "dest"]
     )
 
     assert result.exit_code == 64
     assert result.output == "{}\n".format(exception)
 
 
-def test_dataset_cp(mocker, mock_resolve_project):
+def test_datasets_cp(mocker, mock_resolve_project):
 
     mock_cp = mocker.patch("faculty.datasets.cp")
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["dataset", "cp", "test-project", "source", "dest"]
+        cli, ["datasets", "cp", "test-project", "source", "dest"]
     )
     assert result.exit_code == 0
 
@@ -144,7 +144,7 @@ def test_dataset_cp(mocker, mock_resolve_project):
     )
 
 
-def test_dataset_cp_recursive(mocker, mock_resolve_project):
+def test_datasets_cp_recursive(mocker, mock_resolve_project):
 
     mock_cp = mocker.patch("faculty.datasets.cp")
 
@@ -152,7 +152,7 @@ def test_dataset_cp_recursive(mocker, mock_resolve_project):
     result = runner.invoke(
         cli,
         [
-            "dataset",
+            "datasets",
             "cp",
             "test-project",
             "source-directory",
@@ -178,25 +178,25 @@ def test_dataset_cp_recursive(mocker, mock_resolve_project):
         faculty.clients.object.SourceIsADirectory("source"),
     ],
 )
-def test_dataset_cp_exception(mocker, mock_resolve_project, exception):
+def test_datasets_cp_exception(mocker, mock_resolve_project, exception):
 
     mocker.patch("faculty.datasets.cp", side_effect=exception)
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["dataset", "cp", "test-project", "source", "dest"]
+        cli, ["datasets", "cp", "test-project", "source", "dest"]
     )
 
     assert result.exit_code == 64
     assert result.output == "{}\n".format(exception)
 
 
-def test_dataset_rm(mocker, mock_resolve_project):
+def test_datasets_rm(mocker, mock_resolve_project):
 
     mock_rm = mocker.patch("faculty.datasets.rm")
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["dataset", "rm", "test-project", "object"])
+    result = runner.invoke(cli, ["datasets", "rm", "test-project", "object"])
     assert result.exit_code == 0
 
     mock_resolve_project.assert_called_once_with("test-project")
@@ -205,13 +205,13 @@ def test_dataset_rm(mocker, mock_resolve_project):
     )
 
 
-def test_dataset_rm_recursive(mocker, mock_resolve_project):
+def test_datasets_rm_recursive(mocker, mock_resolve_project):
 
     mock_rm = mocker.patch("faculty.datasets.rm")
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["dataset", "rm", "test-project", "directory", "--recursive"]
+        cli, ["datasets", "rm", "test-project", "directory", "--recursive"]
     )
     assert result.exit_code == 0
 
@@ -230,19 +230,19 @@ def test_dataset_rm_recursive(mocker, mock_resolve_project):
         faculty.clients.object.TargetIsADirectory("object"),
     ],
 )
-def test_dataset_rm_exception(mocker, mock_resolve_project, exception):
+def test_datasets_rm_exception(mocker, mock_resolve_project, exception):
 
     exception = faculty.clients.object.PathNotFound("object")
     mocker.patch("faculty.datasets.rm", side_effect=exception)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["dataset", "rm", "test-project", "object"])
+    result = runner.invoke(cli, ["datasets", "rm", "test-project", "object"])
 
     assert result.exit_code == 64
     assert result.output == "{}\n".format(exception)
 
 
-def test_dataset_ls(mocker, mock_resolve_project):
+def test_datasets_ls(mocker, mock_resolve_project):
 
     mock_ls = mocker.patch(
         "faculty.datasets.ls",
@@ -252,7 +252,7 @@ def test_dataset_ls(mocker, mock_resolve_project):
     runner = CliRunner()
     result = runner.invoke(
         cli,
-        ["dataset", "ls", "test-project", "--prefix", "/", "--show-hidden"],
+        ["datasets", "ls", "test-project", "--prefix", "/", "--show-hidden"],
     )
 
     assert result.exit_code == 0

@@ -1338,12 +1338,12 @@ def ls(project, path):
 
 
 @cli.group()
-def dataset():
+def datasets():
     """Manipulate files in Faculty datasets."""
     pass
 
 
-@dataset.command(name="get")
+@datasets.command(name="get")
 @click.argument("project")
 @click.argument("project_path")
 @click.argument("local_path")
@@ -1358,7 +1358,7 @@ def dataset_get(project, project_path, local_path):
         _print_and_exit(err, 64)
 
 
-@dataset.command(name="put")
+@datasets.command(name="put")
 @click.argument("project")
 @click.argument("local_path")
 @click.argument("project_path")
@@ -1371,7 +1371,7 @@ def dataset_put(project, local_path, project_path):
         _print_and_exit(err, 64)
 
 
-@dataset.command()
+@datasets.command()
 @click.argument("project")
 @click.argument("source_path")
 @click.argument("destination_path")
@@ -1386,7 +1386,7 @@ def mv(project, source_path, destination_path):
         _print_and_exit(err, 64)
 
 
-@dataset.command()
+@datasets.command()
 @click.argument("project")
 @click.argument("source_path")
 @click.argument("destination_path")
@@ -1412,7 +1412,7 @@ def cp(project, source_path, destination_path, recursive):
         _print_and_exit(err, 64)
 
 
-@dataset.command()
+@datasets.command()
 @click.argument("project")
 @click.argument("project_path")
 @click.option(
@@ -1434,7 +1434,7 @@ def rm(project, project_path, recursive):
         _print_and_exit(err, 64)
 
 
-@dataset.command(name="ls")
+@datasets.command(name="ls")
 @click.argument("project")
 @click.option(
     "--prefix",
