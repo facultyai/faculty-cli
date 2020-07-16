@@ -239,7 +239,6 @@ _faculty() {
   esac
 }
 
-
 _faculty_cmds() {
   local commands; commands=(
     'completion:Generate auto-completion scripts for faculty_cli.'
@@ -322,14 +321,14 @@ _faculty_server_cmds() {
 _remote() {
 
   _remote_path_suggestions ${1//\\ /\ } ${2//\\ /\ }
-  IFS=$'\n' SML_REMOTE_PATH_SUGGESTIONS=($(echo $SML_REMOTE_PATH_SUGGESTIONS))
+  IFS=$'\n' FACULTY_REMOTE_PATH_SUGGESTIONS=($(echo $FACULTY_REMOTE_PATH_SUGGESTIONS))
 
   local files=()
   local directories=()
   local files_display=()
   local directories_display=()
 
-  for item in ${SML_REMOTE_PATH_SUGGESTIONS[@]}; do
+  for item in ${FACULTY_REMOTE_PATH_SUGGESTIONS[@]}; do
     if [ ${${:-$item}[-1]} = "/" ]; then
       files+=($item)
       files_display+=($item:t/)
@@ -519,7 +518,7 @@ _remote_path_suggestions() {
     fi
   fi
 
-  SML_REMOTE_PATH_SUGGESTIONS=$(faculty file ls $1 $p)
+  FACULTY_REMOTE_PATH_SUGGESTIONS=$(faculty file ls $1 $p)
 }
 
 compdef _faculty faculty
