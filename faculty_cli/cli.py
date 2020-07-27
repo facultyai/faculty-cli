@@ -1495,7 +1495,8 @@ def clone(source_template_name, version, directory):
     "--source_directory",
     default=Path.cwd(),
     type=click.Path(),
-    help="Path to the source template directory where the template will be placed.",
+    help="Path to the source template directory where the template"
+    + "will be placed.",
 )
 @click.option(
     "--target-directory",
@@ -1530,7 +1531,8 @@ def apply_from_directory(
     "--source_directory",
     default=Path.cwd(),
     type=click.Path(),
-    help="Path to the source template directory where the template will be placed.",
+    help="Path to the source template directory where the template"
+    + "will be placed.",
 )
 @click.option(
     "--target-directory",
@@ -1570,7 +1572,8 @@ def publish():
     "--source_directory",
     default=Path.cwd(),
     type=click.Path(),
-    help="Path to the source template directory where the template will be placed.",
+    help="Path to the source template directory where the"
+    + "template will be placed.",
 )
 def publish_new_template(template_name, source_directory):
     """Publish a new template from a directory to the knowledge centre"""
@@ -1584,9 +1587,11 @@ def publish_new_template(template_name, source_directory):
     "--source_directory",
     default=Path.cwd(),
     type=click.Path(),
-    help="Path to the source template directory where the template will be placed.",
+    help="Path to the source template directory where "
+    + "the template will be placed.",
 )
 def publish_new_version(template_name, source_directory):
-    """Publish a new version from a directory to an existing template in the knowledge centre"""
+    """Publish a new version from a directory to an existing template
+    in the knowledge centre"""
     print(template_name)
     print(source_directory)
