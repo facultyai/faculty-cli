@@ -41,6 +41,7 @@ from faculty.clients.server import (
     SharedServerResources,
 )
 from tabulate import tabulate
+from pathlib import Path
 
 import faculty_cli.auth
 import faculty_cli.config
@@ -1451,3 +1452,143 @@ def dataset_ls(project, prefix, show_hidden):
         prefix, project_id=project_id, show_hidden=show_hidden
     ):
         click.echo(item)
+
+
+@cli.group()
+def template():
+    """Manipulate templates in the Faculty knowledge centre."""
+    pass
+
+
+@template.command()
+def init():
+    """Create a blank template."""
+    print("hello")
+
+
+@template.command()
+@click.argument(
+    "source_template_name"
+)  # Outstanding question as to whether this should also alllow the template_ID
+@click.option(
+    "--version",
+    default=None,
+    help="The specific version of the template to use.",
+)
+@click.option(
+    "--directory",
+    default=Path.cwd(),
+    help="The optional target directory where the template will be placed.",
+    type=click.Path(),
+)
+def clone(source_template_name, version, directory):
+    """Clone an existing template."""
+    print(source_template_name)
+    print(directory)
+
+    if version is None:
+        # TODO: Get the latest version
+        print(version)
+
+
+@template.command()
+@click.argument("project_identifier")
+@click.option(
+    "--source_directory",
+    default=Path.cwd(),
+    type=click.Path(),
+    help="Path to the source template directory where the template will be placed.",
+)
+@click.option(
+    "--target-directory",
+    default=Path("/"),
+    help="The specific version of the template to use.",
+)
+@click.option(
+    "parameters",
+    "--parameter",
+    "-p",
+    type=(str, str),
+    default=[],
+    help="The optional target directory where the template will be placed.",
+    multiple=True,
+)
+def apply_from_directory(
+    project_identifier, source_directory, target_directory, parameters
+):
+    """Apply a template from a directory to an existing project"""
+    project_id = _resolve_project(project_identifier)
+    print(project_id)
+    print(source_directory)
+    print(target_directory)
+
+    for (key, value) in parameters:
+        print(key, value)
+
+
+@template.command()
+@click.argument("project_name")
+@click.option(
+    "--source_directory",
+    default=Path.cwd(),
+    type=click.Path(),
+    help="Path to the source template directory where the template will be placed.",
+)
+@click.option(
+    "--target-directory",
+    default=Path("/"),
+    help="The specific version of the template to use.",
+)
+@click.option(
+    "parameters",
+    "--parameter",
+    "-p",
+    type=(str, str),
+    default=[],
+    help="The optional target directory where the template will be placed.",
+    multiple=True,
+)
+def create_project_from_directory(
+    project_name, source_directory, target_directory, parameters
+):
+    """Apply a template from a directory to a new project"""
+    print(project_name)
+    print(source_directory)
+    print(target_directory)
+
+    for (key, value) in parameters:
+        print(key, value)
+
+
+@template.group()
+def publish():
+    """Publish new templates and version to the Faculty knowledge centre."""
+    pass
+
+
+@publish.command(name="new")
+@click.argument("template_name")
+@click.option(
+    "--source_directory",
+    default=Path.cwd(),
+    type=click.Path(),
+    help="Path to the source template directory where the template will be placed.",
+)
+def publish_new_template(template_name, source_directory):
+    """Publish a new template from a directory to the knowledge centre"""
+    print(template_name)
+    print(source_directory)
+
+
+@publish.command(name="version")
+@click.argument("template_name")
+@click.option(
+    "--source_directory",
+    default=Path.cwd(),
+    type=click.Path(),
+    help="Path to the source template directory where the template will be placed.",
+)
+def publish_new_version(template_name, source_directory):
+    """Publish a new version from a directory to an existing template in the knowledge centre"""
+    print(template_name)
+    print(source_directory)
