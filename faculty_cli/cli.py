@@ -1515,7 +1515,7 @@ def clone(source_template_name, version, directory):
 def apply_from_directory(
     project_identifier, source_directory, target_directory, parameters
 ):
-    """Apply a template from a directory to an existing project"""
+    """Apply from a directory to a project."""
     project_id = _resolve_project(project_identifier)
     print(project_id)
     print(source_directory)
@@ -1531,7 +1531,7 @@ def apply_from_directory(
     "--source_directory",
     default=Path.cwd(),
     type=click.Path(),
-    help="Path to the source template directory where the template"
+    help="Path to the source template directory where the template."
     + "will be placed.",
 )
 @click.option(
@@ -1551,7 +1551,7 @@ def apply_from_directory(
 def create_project_from_directory(
     project_name, source_directory, target_directory, parameters
 ):
-    """Apply a template from a directory to a new project"""
+    """Apply from a directory to a new project."""
     print(project_name)
     print(source_directory)
     print(target_directory)
@@ -1562,7 +1562,7 @@ def create_project_from_directory(
 
 @template.group()
 def publish():
-    """Publish new templates and version to the Faculty knowledge centre."""
+    """Publish to the knowledge centre."""
     pass
 
 
@@ -1576,7 +1576,7 @@ def publish():
     + "template will be placed.",
 )
 def publish_new_template(template_name, source_directory):
-    """Publish a new template from a directory to the knowledge centre"""
+    """Publish a new template from a directory to the knowledge centre."""
     print(template_name)
     print(source_directory)
 
@@ -1591,7 +1591,6 @@ def publish_new_template(template_name, source_directory):
     + "the template will be placed.",
 )
 def publish_new_version(template_name, source_directory):
-    """Publish a new version from a directory to an existing template
-    in the knowledge centre"""
+    """Publish a new version from a directory to an existing template."""
     print(template_name)
     print(source_directory)
