@@ -1327,9 +1327,7 @@ def ls(project, path):
     try:
         [directory_details] = directory_details_list
     except ValueError:
-        _print_and_exit(
-            "Zero or more than one objects returned".format(path), 70
-        )
+        _print_and_exit("Zero or more than one objects returned".format(), 70)
 
     for item in directory_details.content:
         if hasattr(item, "content"):
