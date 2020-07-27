@@ -1327,7 +1327,9 @@ def ls(project, path):
     try:
         [directory_details] = directory_details_list
     except ValueError:
-        _print_and_exit("Zero or more than one objects returned".format(path), 70)
+        _print_and_exit(
+            "Zero or more than one objects returned".format(path), 70
+        )
 
     for item in directory_details.content:
         if hasattr(item, "content"):
@@ -1495,8 +1497,8 @@ def clone(source_template_name, version, directory):
     "--source_directory",
     default=Path.cwd(),
     type=click.Path(),
-    help="Path to the source template directory where the template" +
-    "will be placed.",
+    help="Path to the source template directory where the template"
+    + "will be placed.",
 )
 @click.option(
     "--target-directory",
