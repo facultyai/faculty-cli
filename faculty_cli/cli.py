@@ -41,7 +41,6 @@ from faculty.clients.server import (
     SharedServerResources,
 )
 from tabulate import tabulate
-from pathlib import Path
 
 import faculty_cli.auth
 import faculty_cli.config
@@ -51,6 +50,7 @@ import faculty_cli.parse
 import faculty_cli.shell
 import faculty_cli.update
 import faculty_cli.version
+import faculty_cli.templates
 
 
 SSH_OPTIONS = [
@@ -1461,7 +1461,7 @@ def template():
 @template.command()
 def init():
     """Create a blank template."""
-    print("hello")
+    faculty_cli.templates.create_blank_template()
 
 
 @template.command()
@@ -1475,7 +1475,7 @@ def init():
 )
 @click.option(
     "--target-directory",
-    default=Path.cwd(),
+    default=os.getcwd(),
     help="The optional target directory where the template will be placed.",
     type=click.Path(),
 )
@@ -1493,14 +1493,12 @@ def clone(source_template_name, version, directory):
 @click.argument("project_identifier")
 @click.option(
     "--source_directory",
-    default=Path.cwd(),
+    default=os.getcwd(),
     type=click.Path(),
     help="The source template directory.",
 )
 @click.option(
-    "--target-directory",
-    default=Path("/"),
-    help="The optional target directory.",
+    "--target-directory", default="/", help="The optional target directory.",
 )
 @click.option(
     "parameters",
@@ -1528,14 +1526,12 @@ def apply_from_directory(
 @click.argument("project_name")
 @click.option(
     "--source_directory",
-    default=Path.cwd(),
+    default=os.getcwd(),
     type=click.Path(),
     help="The source template directory.",
 )
 @click.option(
-    "--target-directory",
-    default=Path("/"),
-    help="The optional target directory.",
+    "--target-directory", default="/", help="The optional target directory.",
 )
 @click.option(
     "parameters",
@@ -1568,7 +1564,7 @@ def publish():
 @click.argument("template_name")
 @click.option(
     "--source_directory",
-    default=Path.cwd(),
+    default=os.getcwd(),
     type=click.Path(),
     help="The source template directory.",
 )
@@ -1582,7 +1578,7 @@ def publish_new_template(template_name, source_directory):
 @click.argument("template_name")
 @click.option(
     "--source_directory",
-    default=Path.cwd(),
+    default=os.getcwd(),
     type=click.Path(),
     help="The source template directory.",
 )
