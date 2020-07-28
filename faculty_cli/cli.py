@@ -1498,7 +1498,7 @@ def clone(source_template_name, version, directory):
     help="The source template directory.",
 )
 @click.option(
-    "--target-directory", default="/", help="The optional target directory.",
+    "--target-directory", default="/", help="The optional target directory."
 )
 @click.option(
     "parameters",
@@ -1531,7 +1531,7 @@ def apply_from_directory(
     help="The source template directory.",
 )
 @click.option(
-    "--target-directory", default="/", help="The optional target directory.",
+    "--target-directory", default="/", help="The optional target directory."
 )
 @click.option(
     "parameters",
