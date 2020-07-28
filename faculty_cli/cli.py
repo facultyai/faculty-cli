@@ -1474,7 +1474,7 @@ def init():
     help="The specific version of the template to use.",
 )
 @click.option(
-    "--directory",
+    "--target-directory",
     default=Path.cwd(),
     help="The optional target directory where the template will be placed.",
     type=click.Path(),
@@ -1495,13 +1495,12 @@ def clone(source_template_name, version, directory):
     "--source_directory",
     default=Path.cwd(),
     type=click.Path(),
-    help="Path to the source template directory where the template"
-    + "will be placed.",
+    help="The source template directory.",
 )
 @click.option(
     "--target-directory",
     default=Path("/"),
-    help="The specific version of the template to use.",
+    help="The optional target directory.",
 )
 @click.option(
     "parameters",
@@ -1509,7 +1508,7 @@ def clone(source_template_name, version, directory):
     "-p",
     type=(str, str),
     default=[],
-    help="The optional target directory where the template will be placed.",
+    help="Template parameters as key value pairs",
     multiple=True,
 )
 def apply_from_directory(
@@ -1531,13 +1530,12 @@ def apply_from_directory(
     "--source_directory",
     default=Path.cwd(),
     type=click.Path(),
-    help="Path to the source template directory where the template."
-    + "will be placed.",
+    help="The source template directory.",
 )
 @click.option(
     "--target-directory",
     default=Path("/"),
-    help="The specific version of the template to use.",
+    help="The optional target directory.",
 )
 @click.option(
     "parameters",
@@ -1545,7 +1543,7 @@ def apply_from_directory(
     "-p",
     type=(str, str),
     default=[],
-    help="The optional target directory where the template will be placed.",
+    help="Template parameters as key value pairs",
     multiple=True,
 )
 def create_project_from_directory(
@@ -1572,8 +1570,7 @@ def publish():
     "--source_directory",
     default=Path.cwd(),
     type=click.Path(),
-    help="Path to the source template directory where the"
-    + "template will be placed.",
+    help="The source template directory.",
 )
 def publish_new_template(template_name, source_directory):
     """Publish a new template from a directory to the knowledge centre."""
@@ -1587,8 +1584,7 @@ def publish_new_template(template_name, source_directory):
     "--source_directory",
     default=Path.cwd(),
     type=click.Path(),
-    help="Path to the source template directory where "
-    + "the template will be placed.",
+    help="The source template directory.",
 )
 def publish_new_version(template_name, source_directory):
     """Publish a new version from a directory to an existing template."""
