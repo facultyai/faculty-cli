@@ -1465,9 +1465,7 @@ def init():
 
 
 @template.command()
-@click.argument(
-    "source_template_name"
-)  # Outstanding question as to whether this should also alllow the template_ID
+@click.argument("template")
 @click.option(
     "--version",
     default=None,
@@ -1479,9 +1477,11 @@ def init():
     help="The optional target directory where the template will be placed.",
     type=click.Path(),
 )
-def clone(source_template_name, version, directory):
+def clone(template, version, directory):
     """Clone an existing template."""
-    print(source_template_name)
+    # TODO: template might be passed as UUID or name and we need to resolve it.
+    # See _resolve_project above.
+    print(template)
     print(directory)
 
     if version is None:
@@ -1520,7 +1520,7 @@ def apply_from_directory(
     print(source_directory)
     print(target_directory)
 
-    for (key, value) in parameters:
+    for key, value in parameters:
         print(key, value)
 
 
@@ -1566,12 +1566,7 @@ def publish():
 
 @publish.command(name="new")
 @click.argument("template_name")
-@click.option(
-    "--source_directory",
-    default=Path.cwd(),
-    type=click.Path(),
-    help="The source template directory.",
-)
+@click.argument("source_directory", default=Path.cwd(), required=False)
 def publish_new_template(template_name, source_directory):
     """Publish a new template from a directory to the knowledge centre."""
     print(template_name)
@@ -1580,12 +1575,7 @@ def publish_new_template(template_name, source_directory):
 
 @publish.command(name="version")
 @click.argument("template_name")
-@click.option(
-    "--source_directory",
-    default=Path.cwd(),
-    type=click.Path(),
-    help="The source template directory.",
-)
+@click.argument("source_directory", default=Path.cwd(), required=False)
 def publish_new_version(template_name, source_directory):
     """Publish a new version from a directory to an existing template."""
     print(template_name)
