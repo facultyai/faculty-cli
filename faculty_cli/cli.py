@@ -41,7 +41,6 @@ from faculty.clients.server import (
     SharedServerResources,
 )
 from tabulate import tabulate
-from pathlib import Path
 
 import faculty_cli.auth
 import faculty_cli.config
@@ -1473,7 +1472,7 @@ def init():
 )
 @click.option(
     "--target-directory",
-    default=Path.cwd(),
+    default=os.getcwd(),
     help="The optional target directory where the template will be placed.",
     type=click.Path(),
 )
@@ -1493,14 +1492,12 @@ def clone(template, version, directory):
 @click.argument("project_identifier")
 @click.option(
     "--source_directory",
-    default=Path.cwd(),
+    default=os.getcwd(),
     type=click.Path(),
     help="The source template directory.",
 )
 @click.option(
-    "--target-directory",
-    default=Path("/"),
-    help="The optional target directory.",
+    "--target-directory", default="/", help="The optional target directory."
 )
 @click.option(
     "parameters",
@@ -1528,14 +1525,12 @@ def apply_from_directory(
 @click.argument("project_name")
 @click.option(
     "--source_directory",
-    default=Path.cwd(),
+    default=os.getcwd(),
     type=click.Path(),
     help="The source template directory.",
 )
 @click.option(
-    "--target-directory",
-    default=Path("/"),
-    help="The optional target directory.",
+    "--target-directory", default="/", help="The optional target directory."
 )
 @click.option(
     "parameters",
@@ -1566,7 +1561,7 @@ def publish():
 
 @publish.command(name="new")
 @click.argument("template_name")
-@click.argument("source_directory", default=Path.cwd(), required=False)
+@click.argument("source_directory", default=os.getcwd(), required=False)
 def publish_new_template(template_name, source_directory):
     """Publish a new template from a directory to the knowledge centre."""
     print(template_name)
@@ -1575,7 +1570,7 @@ def publish_new_template(template_name, source_directory):
 
 @publish.command(name="version")
 @click.argument("template_name")
-@click.argument("source_directory", default=Path.cwd(), required=False)
+@click.argument("source_directory", default=os.getcwd(), required=False)
 def publish_new_version(template_name, source_directory):
     """Publish a new version from a directory to an existing template."""
     print(template_name)
