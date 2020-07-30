@@ -1543,7 +1543,7 @@ def create_project_from_directory(
     print(source_directory)
     print(target_directory)
 
-    for (key, value) in parameters:
+    for key, value in parameters:
         print(key, value)
 
 
