@@ -1560,18 +1560,18 @@ def publish():
 
 
 @publish.command(name="new")
-@click.argument("template_name")
+@click.argument("template")
 @click.argument("source_directory", default=os.getcwd(), required=False)
-def publish_new_template(template_name, source_directory):
+def publish_new_template(template, source_directory):
     """Publish a new template from a directory to the knowledge centre."""
-    print(template_name)
+    print(template)
     print(source_directory)
 
 
 @publish.command(name="version")
-@click.argument("template_name")
+@click.argument("template")
 @click.argument("source_directory", default=os.getcwd(), required=False)
-def publish_new_version(template_name, source_directory):
+def publish_new_version(template, source_directory):
     """Publish a new version from a directory to an existing template."""
-    print(template_name)
+    print(template)
     print(source_directory)
