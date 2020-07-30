@@ -1,6 +1,6 @@
 """Command line interface."""
 
-# Copyright 2016-2019 Faculty Science Limited
+# Copyright 2016-2020 Faculty Science Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -1327,7 +1327,7 @@ def ls(project, path):
     try:
         [directory_details] = directory_details_list
     except ValueError:
-        _print_and_exit("Zero or more than one objects returned".format(), 70)
+        _print_and_exit("Zero or more than one objects returned", 70)
 
     for item in directory_details.content:
         if hasattr(item, "content"):
@@ -1461,13 +1461,11 @@ def template():
 @template.command()
 def init():
     """Create a blank template."""
-    faculty_cli.templates.create_blank_template()
+    print("hello")
 
 
 @template.command()
-@click.argument(
-    "source_template_name"
-)  # Outstanding question as to whether this should also alllow the template_ID
+@click.argument("template")
 @click.option(
     "--version",
     default=None,
@@ -1479,9 +1477,11 @@ def init():
     help="The optional target directory where the template will be placed.",
     type=click.Path(),
 )
-def clone(source_template_name, version, directory):
+def clone(template, version, directory):
     """Clone an existing template."""
-    print(source_template_name)
+    # TODO: template might be passed as UUID or name and we need to resolve it.
+    # See _resolve_project above.
+    print(template)
     print(directory)
 
     if version is None:
@@ -1491,11 +1491,8 @@ def clone(source_template_name, version, directory):
 
 @template.command()
 @click.argument("project_identifier")
-@click.option(
-    "--source_directory",
-    default=os.getcwd(),
-    type=click.Path(),
-    help="The source template directory.",
+@click.argument(
+    "source_directory", default=os.getcwd(), type=click.Path(), required=False
 )
 @click.option(
     "--target-directory", default="/", help="The optional target directory."
@@ -1518,17 +1515,14 @@ def apply_from_directory(
     print(source_directory)
     print(target_directory)
 
-    for (key, value) in parameters:
+    for key, value in parameters:
         print(key, value)
 
 
 @template.command()
 @click.argument("project_name")
-@click.option(
-    "--source_directory",
-    default=os.getcwd(),
-    type=click.Path(),
-    help="The source template directory.",
+@click.argument(
+    "source_directory", default=os.getcwd(), type=click.Path(), required=False
 )
 @click.option(
     "--target-directory", default="/", help="The optional target directory."
@@ -1561,28 +1555,18 @@ def publish():
 
 
 @publish.command(name="new")
-@click.argument("template_name")
-@click.option(
-    "--source_directory",
-    default=os.getcwd(),
-    type=click.Path(),
-    help="The source template directory.",
-)
-def publish_new_template(template_name, source_directory):
+@click.argument("template")
+@click.argument("source_directory", default=os.getcwd(), required=False)
+def publish_new_template(template, source_directory):
     """Publish a new template from a directory to the knowledge centre."""
-    print(template_name)
+    print(template)
     print(source_directory)
 
 
 @publish.command(name="version")
-@click.argument("template_name")
-@click.option(
-    "--source_directory",
-    default=os.getcwd(),
-    type=click.Path(),
-    help="The source template directory.",
-)
-def publish_new_version(template_name, source_directory):
+@click.argument("template")
+@click.argument("source_directory", default=os.getcwd(), required=False)
+def publish_new_version(template, source_directory):
     """Publish a new version from a directory to an existing template."""
-    print(template_name)
+    print(template)
     print(source_directory)
