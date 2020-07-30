@@ -1490,11 +1490,8 @@ def clone(template, version, directory):
 
 @template.command()
 @click.argument("project_identifier")
-@click.option(
-    "--source_directory",
-    default=os.getcwd(),
-    type=click.Path(),
-    help="The source template directory.",
+@click.argument(
+    "source_directory", default=os.getcwd(), type=click.Path(), required=False
 )
 @click.option(
     "--target-directory", default="/", help="The optional target directory."
@@ -1523,11 +1520,8 @@ def apply_from_directory(
 
 @template.command()
 @click.argument("project_name")
-@click.option(
-    "--source_directory",
-    default=os.getcwd(),
-    type=click.Path(),
-    help="The source template directory.",
+@click.argument(
+    "source_directory", default=os.getcwd(), type=click.Path(), required=False
 )
 @click.option(
     "--target-directory", default="/", help="The optional target directory."
