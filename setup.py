@@ -60,7 +60,6 @@ setup(
         "requests",
         "six",
         "tabulate",
-        "pyyaml==5.2",  # pyYaml stopped supporting python 3.4 after this
         "faculty>=0.26.0",
     ],
     entry_points={"console_scripts": ["faculty=faculty_cli.cli:cli"]},

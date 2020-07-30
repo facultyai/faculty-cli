@@ -16,10 +16,7 @@
 
 import os
 
-import yaml
-
-DUMMY_PARAMETERS_YAML = yaml.safe_load(
-    """
+DUMMY_PARAMETERS_YAML = """
 # This file describes the parameters used in the interpolation of your
 # template. Each parameter has a name, description and type that help users of
 # your template choose sensible values.
@@ -30,10 +27,8 @@ parameters:
     description: <Some text to help the user choose a suitable value>
     default: <Some sensible default value>
 """
-)
 
-DUMMY_RESOURCE_FILE = yaml.safe_load(
-    """
+DUMMY_RESOURCE_FILE = """
 name: my-environment
 description: My cool environment uses {{ parameter_name }}.
 schemaVersion: v1
@@ -41,8 +36,8 @@ kind: environment
 spec:
   bash:
   - script: |
-     echo \"It also uses it here {{ parameter_name }}\""""
-)
+     echo \"It also uses it here {{ parameter_name }}\"
+"""
 
 
 def create_blank_template():
@@ -53,7 +48,7 @@ def create_blank_template():
 
     def _write_yaml(yaml_content, path):
         with open(os.path.join(os.getcwd(), path), "w") as parameters:
-            yaml.dump(yaml_content, parameters)
+            parameters.write(yaml_content)
 
     _write_yaml(DUMMY_PARAMETERS_YAML, "parameters.yaml")
     _write_yaml(
