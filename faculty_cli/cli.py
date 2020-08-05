@@ -1461,7 +1461,7 @@ def template():
 @template.command()
 def init():
     """Create a blank template."""
-    print("hello")
+    faculty_cli.templates.create_blank_template()
 
 
 @template.command()
