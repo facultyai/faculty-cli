@@ -50,6 +50,7 @@ import faculty_cli.parse
 import faculty_cli.shell
 import faculty_cli.update
 import faculty_cli.version
+import faculty_cli.templates
 
 
 SSH_OPTIONS = [
@@ -1460,7 +1461,7 @@ def template():
 @template.command()
 def init():
     """Create a blank template."""
-    print("hello")
+    faculty_cli.templates.create_blank_template()
 
 
 @template.command()
