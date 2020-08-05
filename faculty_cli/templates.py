@@ -21,22 +21,11 @@ DUMMY_PARAMETERS_YAML = """
 # template. Each parameter has a name, description and type that help users of
 # your template choose sensible values.
 
-parameters:
-  parameter_name:
-    type: <str|bool|filename|number|subdomain>
-    description: <Some text to help the user choose a suitable value>
-    default: <Some sensible default value>
-"""
-
-DUMMY_RESOURCE_FILE = """
-name: my-environment
-description: My cool environment uses {{ parameter_name }}.
-schemaVersion: v1
-kind: environment
-spec:
-  bash:
-  - script: |
-     echo \"It also uses it here {{ parameter_name }}\"
+# parameters:
+#   parameter_name:
+#     type: <str|bool|filename|number|subdomain>
+#     description: <Some text to help the user choose a suitable value>
+#     default: <Some sensible default value>
 """
 
 
@@ -51,6 +40,3 @@ def create_blank_template():
             parameters.write(yaml_content)
 
     _write_yaml(DUMMY_PARAMETERS_YAML, "parameters.yaml")
-    _write_yaml(
-        DUMMY_RESOURCE_FILE, os.path.join(resource_path, "environment.yaml")
-    )
