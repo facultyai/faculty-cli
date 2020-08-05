@@ -16,7 +16,7 @@
 
 import os
 
-DUMMY_PARAMETERS_YAML = """
+EMPTY_PARAMETERS_YAML = """
 # This file describes the parameters used in the interpolation of your
 # template. Each parameter has a name, description and type that help users of
 # your template choose sensible values.
@@ -39,4 +39,4 @@ def create_blank_template():
         with open(os.path.join(os.getcwd(), path), "w") as parameters:
             parameters.write(yaml_content)
 
-    _write_yaml(DUMMY_PARAMETERS_YAML, "parameters.yaml")
+    _write_yaml(EMPTY_PARAMETERS_YAML, "parameters.yaml")
