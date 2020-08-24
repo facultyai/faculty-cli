@@ -36,7 +36,7 @@ setup(
     description="The command line interface to Faculty",
     long_description=read_long_description(),
     long_description_content_type="text/markdown",
-    url="https://sherlockml.com",
+    url="https://faculty.ai/platform/",
     author="Faculty",
     author_email="opensource@faculty.ai",
     license="Apache Software License",
