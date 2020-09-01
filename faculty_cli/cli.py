@@ -16,6 +16,7 @@
 
 from __future__ import division
 
+import json
 import contextlib
 import operator
 import os
@@ -34,6 +35,7 @@ import faculty
 import faculty.config
 import requests
 import faculty.clients.base
+from faculty.context import get_context
 import faculty.datasets
 from faculty.clients.server import (
     DedicatedServerResources,
@@ -1556,11 +1558,26 @@ def publish():
 
 @publish.command(name="new")
 @click.argument("template")
-@click.argument("source_directory", default=os.getcwd(), required=False)
+# TODO handle /project
+@click.argument("source_directory", default=os.getcwd().lstrip('/project'), required=False)
 def publish_new_template(template, source_directory):
     """Publish a new template from a directory to the knowledge centre."""
-    print(template)
-    print(source_directory)
+    # TODO handle paths with /project
+    # TODO handle FACULTY_PROJECT_ID not set
+    project_id =  get_context().project_id
+    template_client = faculty.client("template")
+    frontend_client = faculty.client("frontend")
+
+    events = frontend_client.foo(_get_authenticated_user_id())
+
+    template_client.publish_new(template, source_directory, project_id)
+
+    for event in events:
+            # print(event)
+            # print(event.id)
+            print(event.event)
+            # print(event.data)
+            print(json.loads(event.data))
 
 
 @publish.command(name="version")
