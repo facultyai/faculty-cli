@@ -1558,26 +1558,31 @@ def publish():
 
 @publish.command(name="new")
 @click.argument("template")
-# TODO handle /project
 @click.argument("source_directory", default=os.getcwd().lstrip('/project'), required=False)
 def publish_new_template(template, source_directory):
     """Publish a new template from a directory to the knowledge centre."""
     # TODO handle paths with /project
-    # TODO handle FACULTY_PROJECT_ID not set
-    project_id =  get_context().project_id
     template_client = faculty.client("template")
     frontend_client = faculty.client("frontend")
 
-    events = frontend_client.foo(_get_authenticated_user_id())
-
+    project_id =  get_context().project_id # TODO handle FACULTY_PROJECT_ID not set
+    user_id = _get_authenticated_user_id()
+    
+    events = frontend_client.user_updates(user_id)
+    # start collecting events before publishing so we dont lose our event
     template_client.publish_new(template, source_directory, project_id)
 
     for event in events:
-            # print(event)
-            # print(event.id)
-            print(event.event)
-            # print(event.data)
-            print(json.loads(event.data))
+        print(event)
+        if event.event == '@SSE/PROJECT_TEMPLATE_PUBLISH_NEW_FAILED':
+            error = json.loads(event.data)
+            if error['sourceProjectId'] == str(project_id): # TODO load response into a schema
+                code = error["errorCode"]
+                print(code) # TODO
+                msg = error["error"]
+                _print_and_exit(msg, 64)
+        elif event.event == '@SSE/PROJECT_TEMPLATE_PUBLISH_NEW_COMPLETED':
+            return
 
 
 @publish.command(name="version")
