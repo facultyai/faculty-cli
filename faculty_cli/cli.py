@@ -37,6 +37,7 @@ import requests
 import faculty.clients.base
 from faculty.context import get_context
 import faculty.datasets
+from faculty.clients.frontend import TemplatePublishingError
 from faculty.clients.server import (
     DedicatedServerResources,
     ServerStatus,
@@ -1558,7 +1559,7 @@ def publish():
 
 @publish.command(name="new")
 @click.argument("template")
-@click.argument("source_directory", default=os.getcwd().lstrip('/project'), required=False)
+@click.argument("source_directory", default=os.getcwd(), required=False)
 def publish_new_template(template, source_directory):
     """Publish a new template from a directory to the knowledge centre."""
     # TODO handle paths with /project
@@ -1568,21 +1569,20 @@ def publish_new_template(template, source_directory):
     project_id =  get_context().project_id # TODO handle FACULTY_PROJECT_ID not set
     user_id = _get_authenticated_user_id()
     
+    project_prefix = "/project/"
+    if source_directory.startswith(project_prefix):
+        source_directory = source_directory[len(project_prefix):] 
+    # TODO relative paths
+    print(f"source dir: {source_directory}")
+
     events = frontend_client.user_updates(user_id)
     # start collecting events before publishing so we dont lose our event
     template_client.publish_new(template, source_directory, project_id)
-
-    for event in events:
-        print(event)
-        if event.event == '@SSE/PROJECT_TEMPLATE_PUBLISH_NEW_FAILED':
-            error = json.loads(event.data)
-            if error['sourceProjectId'] == str(project_id): # TODO load response into a schema
-                code = error["errorCode"]
-                print(code) # TODO
-                msg = error["error"]
-                _print_and_exit(msg, 64)
-        elif event.event == '@SSE/PROJECT_TEMPLATE_PUBLISH_NEW_COMPLETED':
-            return
+    try:
+        frontend_client.check_publish_template_result(events, project_id)
+        click.echo("Successfully published template {}".format(template))
+    except TemplatePublishingError as err:
+        _print_and_exit(err, 64)
 
 
 @publish.command(name="version")
