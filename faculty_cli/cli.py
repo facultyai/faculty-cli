@@ -1577,7 +1577,10 @@ def publish_new_template(template, source_directory):
 
     events = frontend_client.user_updates(user_id)
     # start collecting events before publishing so we dont lose our event
-    template_client.publish_new(template, source_directory, project_id)
+    try:
+        template_client.publish_new(template, source_directory, project_id)
+    except faculty.clients.base.BadRequest as err:
+        _print_and_exit(err.error, 64)
     try:
         frontend_client.check_publish_template_result(events, project_id)
         click.echo("Successfully published template {}".format(template))
