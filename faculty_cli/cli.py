@@ -37,7 +37,7 @@ import requests
 import faculty.clients.base
 from faculty.context import get_context
 import faculty.datasets
-from faculty.clients.frontend import TemplatePublishingError
+from faculty.clients.notification import TemplatePublishingError
 from faculty.clients.server import (
     DedicatedServerResources,
     ServerStatus,
@@ -1564,7 +1564,7 @@ def publish_new_template(template, source_directory):
     """Publish a new template from a directory to the knowledge centre."""
     # TODO handle paths with /project
     template_client = faculty.client("template")
-    frontend_client = faculty.client("frontend")
+    notification_client = faculty.client("notification")
 
     project_id =  get_context().project_id # TODO handle FACULTY_PROJECT_ID not set
     user_id = _get_authenticated_user_id()
@@ -1573,16 +1573,16 @@ def publish_new_template(template, source_directory):
     if source_directory.startswith(project_prefix):
         source_directory = source_directory[len(project_prefix):] 
     # TODO relative paths
-    print(f"source dir: {source_directory}")
+    # print(f"source dir: {source_directory}")
 
-    events = frontend_client.user_updates(user_id)
+    events = notification_client.user_updates(user_id)
     # start collecting events before publishing so we dont lose our event
     try:
         template_client.publish_new(template, source_directory, project_id)
     except faculty.clients.base.BadRequest as err:
         _print_and_exit(err.error, 64)
     try:
-        frontend_client.check_publish_template_result(events, project_id)
+        notification_client.check_publish_template_result(events, project_id)
         click.echo("Successfully published template {}".format(template))
     except TemplatePublishingError as err:
         _print_and_exit(err, 64)
