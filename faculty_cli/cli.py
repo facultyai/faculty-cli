@@ -409,7 +409,7 @@ def _path_in_project(path_in_server):
     if path_in_server == "/project":
         return "/"
     elif path_in_server.startswith("/project/"):
-        return path_in_server[len("/project") :]
+        return path_in_server[len("/project"):]
     else:
         return path_in_server
 
