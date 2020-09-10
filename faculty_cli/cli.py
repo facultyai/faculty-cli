@@ -1585,7 +1585,7 @@ def publish_new_template(template, source_directory):
     src_dir_in_project = _path_in_project(abs_src_dir)
 
     events = notification_client.user_updates(user_id)
-    # start collecting events before publishing so we dont lose our event
+    # Start collecting events before publishing so we don't lose our event
     try:
         template_client.publish_new(template, src_dir_in_project, project_id)
     except faculty.clients.base.BadRequest as err:
