@@ -16,7 +16,6 @@
 
 from __future__ import division
 
-import json
 import contextlib
 import operator
 import os
@@ -404,6 +403,15 @@ def _format_datetime(timestamp):
         return "-"
     else:
         return timestamp.strftime("%Y-%m-%d %H:%M")
+
+
+def _path_in_project(path_in_server):
+    if path_in_server == "/project":
+        return "/"
+    elif path_in_server.startswith("/project/"):
+        return path_in_server[len("/project") :]
+    else:
+        return path_in_server
 
 
 class FacultyCLIGroup(click.Group):
@@ -1562,28 +1570,29 @@ def publish():
 @click.argument("source_directory", default=os.getcwd(), required=False)
 def publish_new_template(template, source_directory):
     """Publish a new template from a directory to the knowledge centre."""
-    # TODO handle paths with /project
     template_client = faculty.client("template")
     notification_client = faculty.client("notification")
 
-    project_id =  get_context().project_id # TODO handle FACULTY_PROJECT_ID not set
     user_id = _get_authenticated_user_id()
-    
-    project_prefix = "/project/"
-    if source_directory.startswith(project_prefix):
-        source_directory = source_directory[len(project_prefix):] 
-    # TODO relative paths
-    # print(f"source dir: {source_directory}")
+    project_id = get_context().project_id
+
+    if not project_id:
+        _print_and_exit("Project ID must be set using FACULTY_PROJECT_ID.", 64)
+
+    abs_src_dir = os.path.abspath(source_directory)
+    if not (abs_src_dir == "/project" or abs_src_dir.startswith("/project/")):
+        _print_and_exit("Source directory must be under /project.", 64)
+    src_dir_in_project = _path_in_project(abs_src_dir)
 
     events = notification_client.user_updates(user_id)
     # start collecting events before publishing so we dont lose our event
     try:
-        template_client.publish_new(template, source_directory, project_id)
+        template_client.publish_new(template, src_dir_in_project, project_id)
     except faculty.clients.base.BadRequest as err:
         _print_and_exit(err.error, 64)
     try:
         notification_client.check_publish_template_result(events, project_id)
-        click.echo("Successfully published template {}".format(template))
+        click.echo("Successfully published template `{}`.".format(template))
     except TemplatePublishingError as err:
         _print_and_exit(err, 64)
 
