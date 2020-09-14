@@ -60,10 +60,7 @@ setup(
         "requests",
         "six",
         "tabulate",
-        (
-            "faculty@git+https://github.com/facultyai/faculty"
-            "@publish-template#egg=faculty"
-        ),
+        "faculty @ git+https://github.com/facultyai/faculty.git@publish-template#egg=faculty",
     ],
     entry_points={"console_scripts": ["faculty=faculty_cli.cli:cli"]},
 )
