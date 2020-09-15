@@ -1591,14 +1591,16 @@ def publish_new_template(template, source_directory):
         )
     src_dir_in_project = _path_in_project(abs_src_dir)
 
-    events = notification_client.user_updates(user_id)
+    notifications = notification_client.get_publish_template_notifications(
+        user_id, project_id
+    )
     # Start collecting events before publishing so we don't lose our event
     try:
         template_client.publish_new(template, src_dir_in_project, project_id)
     except faculty.clients.base.BadRequest as err:
         _print_and_exit(err.error, 64)
     try:
-        notification_client.check_publish_template_result(events, project_id)
+        notifications.wait_for_completion()
         click.echo("Successfully published template `{}`.".format(template))
     except TemplatePublishingError as err:
         _print_and_exit(err, 64)

@@ -8,15 +8,13 @@ from sseclient import Event
 from faculty_cli.cli import cli
 from faculty.clients.account import AccountClient
 from faculty.clients.template import TemplateClient
-from faculty.clients.notification import NotificationClient
+from faculty.clients.notification import (
+    NotificationClient,
+    PublishTemplateNotifications,
+)
 
 USER_ID = uuid.uuid4()
 PROJECT_ID = uuid.uuid4()
-
-
-def mock_events():
-    yield Event()
-    yield Event()
 
 
 def test_init():
@@ -49,12 +47,11 @@ def test_publish_new_template_success(mocker):
         AccountClient, "authenticated_user_id", return_value=USER_ID
     )
     mocker.patch("os.path.abspath", return_value="/project/src/")
-    events = mock_events()
-    user_updates_mock = mocker.patch.object(
-        NotificationClient, "user_updates", return_value=events
-    )
-    check_publish_result_mock = mocker.patch.object(
-        NotificationClient, "check_publish_template_result"
+    mock_notifications = mocker.Mock()
+    get_notifications_mock = mocker.patch.object(
+        NotificationClient,
+        "get_publish_template_notifications",
+        return_value=mock_notifications,
     )
     publish_new_mock = mocker.patch.object(TemplateClient, "publish_new")
 
@@ -65,9 +62,9 @@ def test_publish_new_template_success(mocker):
     assert result.exit_code == 0
     assert result.stdout == "Successfully published template `name`.\n"
 
-    user_updates_mock.assert_called_once_with(USER_ID)
+    get_notifications_mock.assert_called_once_with(USER_ID, PROJECT_ID)
     publish_new_mock.assert_called_once_with("name", "/src/", PROJECT_ID)
-    check_publish_result_mock.assert_called_once_with(events, PROJECT_ID)
+    mock_notifications.wait_for_completion.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
@@ -90,12 +87,11 @@ def test_publish_new_template_custom_source_dir(
         AccountClient, "authenticated_user_id", return_value=USER_ID
     )
     mocker.patch("os.path.abspath", return_value=mock_abs_src_dir)
-    events = mock_events()
-    user_updates_mock = mocker.patch.object(
-        NotificationClient, "user_updates", return_value=events
-    )
-    check_publish_result_mock = mocker.patch.object(
-        NotificationClient, "check_publish_template_result"
+    mock_notifications = mocker.Mock()
+    get_notifications_mock = mocker.patch.object(
+        NotificationClient,
+        "get_publish_template_notifications",
+        return_value=mock_notifications,
     )
     publish_new_mock = mocker.patch.object(TemplateClient, "publish_new")
 
@@ -108,11 +104,11 @@ def test_publish_new_template_custom_source_dir(
     assert result.exit_code == 0
     assert result.stdout == "Successfully published template `name`.\n"
 
-    user_updates_mock.assert_called_once_with(USER_ID)
+    get_notifications_mock.assert_called_once_with(USER_ID, PROJECT_ID)
     publish_new_mock.assert_called_once_with(
         "name", expected_src_dir, PROJECT_ID
     )
-    check_publish_result_mock.assert_called_once_with(events, PROJECT_ID)
+    mock_notifications.wait_for_completion.assert_called_once_with()
 
 
 def test_publish_new_template_outside_project(mocker):
