@@ -63,7 +63,7 @@ def test_publish_new_template_success(mocker):
     assert result.stdout == "Successfully published template `name`.\n"
 
     get_notifications_mock.assert_called_once_with(USER_ID, PROJECT_ID)
-    publish_new_mock.assert_called_once_with("name", "/src/", PROJECT_ID)
+    publish_new_mock.assert_called_once_with(PROJECT_ID, "name", "/src/")
     mock_notifications.wait_for_completion.assert_called_once_with()
 
 
@@ -106,7 +106,7 @@ def test_publish_new_template_custom_source_dir(
 
     get_notifications_mock.assert_called_once_with(USER_ID, PROJECT_ID)
     publish_new_mock.assert_called_once_with(
-        "name", expected_src_dir, PROJECT_ID
+        PROJECT_ID, "name", expected_src_dir
     )
     mock_notifications.wait_for_completion.assert_called_once_with()
 
