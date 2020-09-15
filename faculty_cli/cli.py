@@ -1596,7 +1596,7 @@ def publish_new_template(template, source_directory):
     )
     # Start collecting events before publishing so we don't lose our event
     try:
-        template_client.publish_new(template, src_dir_in_project, project_id)
+        template_client.publish_new(project_id, template, src_dir_in_project)
     except faculty.clients.base.BadRequest as err:
         _print_and_exit(err.error, 64)
     try:
