@@ -3,15 +3,11 @@ import uuid
 
 from click.testing import CliRunner
 import pytest
-from sseclient import Event
 
 from faculty_cli.cli import cli
 from faculty.clients.account import AccountClient
 from faculty.clients.template import TemplateClient
-from faculty.clients.notification import (
-    NotificationClient,
-    PublishTemplateNotifications,
-)
+from faculty.clients.notification import NotificationClient
 
 USER_ID = uuid.uuid4()
 PROJECT_ID = uuid.uuid4()
