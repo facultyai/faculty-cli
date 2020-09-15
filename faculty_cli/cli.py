@@ -1577,11 +1577,18 @@ def publish_new_template(template, source_directory):
     project_id = get_context().project_id
 
     if not project_id:
-        _print_and_exit("Project ID must be set using FACULTY_PROJECT_ID.", 64)
+        _print_and_exit(
+            "This command is meant to be used from inside a Faculty server.",
+            64,
+        )
 
     abs_src_dir = os.path.abspath(source_directory)
     if not (abs_src_dir == "/project" or abs_src_dir.startswith("/project/")):
-        _print_and_exit("Source directory must be under /project.", 64)
+        _print_and_exit(
+            "Source directory must be under /project. "
+            "This command is meant to be used from inside a Faculty server.",
+            64,
+        )
     src_dir_in_project = _path_in_project(abs_src_dir)
 
     events = notification_client.user_updates(user_id)

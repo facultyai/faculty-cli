@@ -39,7 +39,8 @@ def test_publish_new_template_missing_project_id(mocker):
 
     assert result.exit_code >= 1
     assert (
-        result.stderr == "Project ID must be set using FACULTY_PROJECT_ID.\n"
+        result.stderr
+        == "This command is meant to be used from inside a Faculty server.\n"
     )
 
 
@@ -126,4 +127,7 @@ def test_publish_new_template_outside_project(mocker):
         cli, ["template", "publish", "new", "name", "/outside/project"]
     )
     assert result.exit_code >= 1
-    assert result.stderr == "Source directory must be under /project.\n"
+    assert result.stderr == (
+        "Source directory must be under /project. "
+        "This command is meant to be used from inside a Faculty server.\n"
+    )
