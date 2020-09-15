@@ -34,7 +34,9 @@ import faculty
 import faculty.config
 import requests
 import faculty.clients.base
+from faculty.context import get_context
 import faculty.datasets
+from faculty.clients.notification import TemplatePublishingError
 from faculty.clients.server import (
     DedicatedServerResources,
     ServerStatus,
@@ -401,6 +403,15 @@ def _format_datetime(timestamp):
         return "-"
     else:
         return timestamp.strftime("%Y-%m-%d %H:%M")
+
+
+def _path_in_project(path_in_server):
+    if path_in_server == "/project":
+        return "/"
+    elif path_in_server.startswith("/project/"):
+        return path_in_server[len("/project") :]
+    else:
+        return path_in_server
 
 
 class FacultyCLIGroup(click.Group):
@@ -1559,8 +1570,40 @@ def publish():
 @click.argument("source_directory", default=os.getcwd(), required=False)
 def publish_new_template(template, source_directory):
     """Publish a new template from a directory to the knowledge centre."""
-    print(template)
-    print(source_directory)
+    template_client = faculty.client("template")
+    notification_client = faculty.client("notification")
+
+    user_id = _get_authenticated_user_id()
+    project_id = get_context().project_id
+
+    if not project_id:
+        _print_and_exit(
+            "This command is meant to be used from inside a Faculty server.",
+            64,
+        )
+
+    abs_src_dir = os.path.abspath(source_directory)
+    if not (abs_src_dir == "/project" or abs_src_dir.startswith("/project/")):
+        _print_and_exit(
+            "Source directory must be under /project. "
+            "This command is meant to be used from inside a Faculty server.",
+            64,
+        )
+    src_dir_in_project = _path_in_project(abs_src_dir)
+
+    notifications = notification_client.get_publish_template_notifications(
+        user_id, project_id
+    )
+    # Start collecting events before publishing so we don't lose our event
+    try:
+        template_client.publish_new(project_id, template, src_dir_in_project)
+    except faculty.clients.base.BadRequest as err:
+        _print_and_exit(err.error, 64)
+    try:
+        notifications.wait_for_completion()
+        click.echo("Successfully published template `{}`.".format(template))
+    except TemplatePublishingError as err:
+        _print_and_exit(err, 64)
 
 
 @publish.command(name="version")
