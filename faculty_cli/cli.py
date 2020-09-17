@@ -1501,12 +1501,15 @@ def clone(template, version, directory):
 
 
 @template.command()
-@click.argument("project_identifier")
+@click.argument("target_project_identifier")
 @click.argument(
     "source_directory", default=os.getcwd(), type=click.Path(), required=False
 )
 @click.option(
-    "--target-directory", default="/", help="The optional target directory."
+    "-t",
+    "--target-directory",
+    default="/",
+    help="The optional target directory.",
 )
 @click.option(
     "parameters",
@@ -1517,17 +1520,55 @@ def clone(template, version, directory):
     help="Template parameters as key value pairs",
     multiple=True,
 )
-def apply_from_directory(
-    project_identifier, source_directory, target_directory, parameters
+def add_to_project_from_directory(
+    target_project_identifier, source_directory, target_directory, parameters
 ):
     """Apply from a directory to a project."""
-    project_id = _resolve_project(project_identifier)
-    print(project_id)
-    print(source_directory)
-    print(target_directory)
+    template_client = faculty.client("template")
+    notification_client = faculty.client("notification")
 
-    for key, value in parameters:
-        print(key, value)
+    user_id = _get_authenticated_user_id()
+    target_project_id = _resolve_project(target_project_identifier)
+    source_project_id = get_context().project_id
+    if not source_project_id:
+        _print_and_exit(
+            "This command is meant to be used from inside a Faculty server.",
+            64,
+        )
+
+    abs_src_dir = os.path.abspath(source_directory)
+    if not (abs_src_dir == "/project" or abs_src_dir.startswith("/project/")):
+        _print_and_exit(
+            "Source directory must be under /project. "
+            "This command is meant to be used from inside a Faculty server.",
+            64,
+        )
+    src_dir_in_project = _path_in_project(abs_src_dir)
+
+    notifications = notification_client.get_add_to_project_from_dir_notifications(
+        user_id, target_project_id
+    )
+    # Start collecting events before publishing so we don't lose our event
+    try:
+        template_client.add_to_project_from_directory(
+            source_project_id,
+            src_dir_in_project,
+            target_project_id,
+            target_directory,
+            parameters,
+        )
+    except (faculty.clients.template.TemplateException) as e:
+        _print_and_exit(e, 64)
+
+    try:
+        notifications.wait_for_completion()
+        click.echo(
+            "Successfully applied template to project {}.".format(
+                target_project_identifier
+            )
+        )
+    except TemplatePublishingError as err:
+        _print_and_exit(err, 64)
 
 
 @template.command()
