@@ -1545,7 +1545,7 @@ def add_to_project_from_directory(
         )
     src_dir_in_project = _path_in_project(abs_src_dir)
 
-    notifications = notification_client.get_add_to_project_from_dir_notifications(
+    notifications = notification_client.add_to_project_from_dir_notifications(
         user_id, target_project_id
     )
     # Start collecting events before publishing so we don't lose our event
@@ -1632,7 +1632,7 @@ def publish_new_template(template, source_directory):
         )
     src_dir_in_project = _path_in_project(abs_src_dir)
 
-    notifications = notification_client.get_publish_template_notifications(
+    notifications = notification_client.publish_template_notifications(
         user_id, project_id
     )
     # Start collecting events before publishing so we don't lose our event

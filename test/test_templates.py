@@ -46,7 +46,7 @@ def test_publish_new_template_success(mocker):
     mock_notifications = mocker.Mock()
     get_notifications_mock = mocker.patch.object(
         NotificationClient,
-        "get_publish_template_notifications",
+        "publish_template_notifications",
         return_value=mock_notifications,
     )
     publish_new_mock = mocker.patch.object(TemplateClient, "publish_new")
@@ -86,7 +86,7 @@ def test_publish_new_template_custom_source_dir(
     mock_notifications = mocker.Mock()
     get_notifications_mock = mocker.patch.object(
         NotificationClient,
-        "get_publish_template_notifications",
+        "publish_template_notifications",
         return_value=mock_notifications,
     )
     publish_new_mock = mocker.patch.object(TemplateClient, "publish_new")
