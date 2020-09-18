@@ -22,6 +22,7 @@ from faculty.clients.template import (
     ResourceValidationFailure,
     DefaultParametersParsingError,
     ParameterValidationFailure,
+    GenericParsingError,
 )
 
 EMPTY_PARAMETERS_YAML = """
@@ -52,10 +53,11 @@ def create_blank_template():
 
 def publishing_error_message(error: TemplateException):
     formatters = {
-        DefaultParametersParsingError: _default_params_error,
+        DefaultParametersParsingError: _simple_error_formatter,
         ResourceValidationFailure: _resource_validation_error,
         ParameterValidationFailure: _parameter_validation_error,
         TemplateRetrievalFailure: _retrieval_error,
+        GenericParsingError: _simple_error_formatter,
     }
     formatter = formatters.get(type(error), _default_error_message)
     return formatter(error)
@@ -74,12 +76,13 @@ def _one_per_line(error_message_lists):
     return "\n".join(messages)
 
 
-def _default_params_error(error):
+def _simple_error_formatter(error):
     return error.error
 
 
 def _parameter_validation_error(errors):
-    return _map_prefix("Parameter validation failed:", errors.errors)
+    messages = _map_prefix("Parameter validation failed: ", errors.errors)
+    return "\n".join(messages)
 
 
 def _retrieval_error(error):
@@ -88,7 +91,7 @@ def _retrieval_error(error):
         for prefix, errors in [
             ("Error reading app resource definition: ", error.apps),
             ("Error reading API resource definition: ", error.apis),
-            ("Error reading environment resource definition: ", error.envs),
+            ("Error reading environment resource definition: ", error.environments),
             ("Error reading app job definition: ", error.jobs),
         ]
     ]
@@ -115,7 +118,7 @@ def _resource_validation_error(error):
             ("Job name already exists: ", jobs.name_conflicts),
             ("Invalid job name: ", jobs.invalid_names),
             ("Invalid job working directory: ", jobs.invalid_working_dirs),
-            ("Workspace file conflicts: ", workspace.name_conflicts),
+            ("Workspace file already exists: ", workspace.name_conflicts),
         ]
     ]
     return _one_per_line(message_lists)
