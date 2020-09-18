@@ -53,7 +53,7 @@ import faculty_cli.shell
 import faculty_cli.update
 import faculty_cli.version
 import faculty_cli.templates
-
+from faculty_cli import templates
 
 SSH_OPTIONS = [
     "-o",
@@ -1555,10 +1555,10 @@ def add_to_project_from_directory(
             src_dir_in_project,
             target_project_id,
             target_directory,
-            parameters,
+            dict(parameters),
         )
-    except (faculty.clients.template.TemplateException) as e:
-        _print_and_exit(e, 64)
+    except faculty.clients.template.TemplateException as e:
+        _print_and_exit(templates.publishing_error_message(e), 64)
 
     try:
         notifications.wait_for_completion()
