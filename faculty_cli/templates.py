@@ -17,7 +17,6 @@
 import os
 
 from faculty.clients.template import (
-    TemplateException,
     TemplateRetrievalFailure,
     ResourceValidationFailure,
     DefaultParametersParsingError,
