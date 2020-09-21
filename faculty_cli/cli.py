@@ -1638,8 +1638,8 @@ def publish_new_template(template, source_directory):
     # Start collecting events before publishing so we don't lose our event
     try:
         template_client.publish_new(project_id, template, src_dir_in_project)
-    except faculty.clients.base.BadRequest as err:
-        _print_and_exit(err.error, 64)
+    except faculty.clients.template.TemplateException as e:
+        _print_and_exit(templates.publishing_error_message(e), 64)
     try:
         notifications.wait_for_completion()
         click.echo("Successfully published template `{}`.".format(template))
