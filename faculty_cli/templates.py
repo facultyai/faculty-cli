@@ -51,7 +51,7 @@ def create_blank_template():
     _write_yaml(EMPTY_PARAMETERS_YAML, "parameters.yaml")
 
 
-def publishing_error_message(error: TemplateException):
+def publishing_error_message(error):
     formatters = {
         DefaultParametersParsingError: _simple_error_formatter,
         ResourceValidationFailure: _resource_validation_error,
