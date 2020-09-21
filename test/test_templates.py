@@ -17,7 +17,8 @@ from faculty.clients.template import (
     EnvironmentValidationFailure,
     JobValidationFailure,
     WorkspaceValidationFailure,
-    ParameterValidationFailure, TemplateRetrievalFailure,
+    ParameterValidationFailure,
+    TemplateRetrievalFailure,
 )
 from faculty.clients.notification import NotificationClient
 from faculty.clients.project import Project
@@ -29,6 +30,17 @@ TARGET_PROJECT_ID = uuid.uuid4()
 TARGET_PROJECT = Project(
     id=TARGET_PROJECT_ID, name="target-project", owner_id=USER_ID
 )
+
+CUSTOM_SOURCE_DIRS = [
+    ("source/dir", "/project/source/dir", "/source/dir"),
+    ("", "/project", "/"),
+    ("", "/project/path", "/path"),
+    (".", "/project", "/"),
+    (".", "/project/path", "/path"),
+    ("/project", "/project", "/"),
+    ("/project/", "/project", "/"),
+    ("/project/path", "/project/path", "/path"),
+]
 
 
 def test_init():
@@ -84,17 +96,7 @@ def test_publish_new_template_success(mocker):
 
 
 @pytest.mark.parametrize(
-    "input_src_dir, mock_abs_src_dir, expected_src_dir",
-    [
-        ("source/dir", "/project/source/dir", "/source/dir"),
-        ("", "/project", "/"),
-        ("", "/project/path", "/path"),
-        (".", "/project", "/"),
-        (".", "/project/path", "/path"),
-        ("/project", "/project", "/"),
-        ("/project/", "/project", "/"),
-        ("/project/path", "/project/path", "/path"),
-    ],
+    "input_src_dir, mock_abs_src_dir, expected_src_dir", CUSTOM_SOURCE_DIRS
 )
 def test_publish_new_template_custom_source_dir(
     mocker, input_src_dir, mock_abs_src_dir, expected_src_dir
@@ -145,6 +147,25 @@ def test_publish_new_template_outside_project(mocker):
     )
 
 
+def test_add_to_project_from_directory_missing_project_id(mocker):
+    mocker.patch.object(
+        AccountClient, "authenticated_user_id", return_value=USER_ID
+    )
+    mocker.patch(
+        "faculty_cli.cli._list_projects", return_value=[TARGET_PROJECT]
+    )
+    runner = CliRunner(mix_stderr=False, env={"FACULTY_PROJECT_ID": None})
+    result = runner.invoke(
+        cli, ["template", "add-to-project-from-directory", "target-project"]
+    )
+
+    assert result.exit_code >= 1
+    assert (
+        result.stderr
+        == "This command is meant to be used from inside a Faculty server.\n"
+    )
+
+
 def test_add_to_project_from_directory(mocker):
     mocker.patch.object(
         AccountClient, "authenticated_user_id", return_value=USER_ID
@@ -192,6 +213,61 @@ def test_add_to_project_from_directory(mocker):
 
 
 @pytest.mark.parametrize(
+    "input_src_dir, mock_abs_src_dir, expected_src_dir", CUSTOM_SOURCE_DIRS
+)
+def test_add_to_project_from_directory_custom_source_dir(
+    mocker, input_src_dir, mock_abs_src_dir, expected_src_dir
+):
+    mocker.patch.object(
+        AccountClient, "authenticated_user_id", return_value=USER_ID
+    )
+    mocker.patch(
+        "faculty_cli.cli._list_projects", return_value=[TARGET_PROJECT]
+    )
+    mocker.patch("os.path.abspath", return_value=mock_abs_src_dir)
+    mock_notifications = mocker.Mock()
+    notifications_mock = mocker.patch.object(
+        NotificationClient,
+        "add_to_project_from_dir_notifications",
+        return_value=mock_notifications,
+    )
+    add_to_project_from_directory_mock = mocker.patch.object(
+        TemplateClient, "add_to_project_from_directory"
+    )
+
+    runner = CliRunner(
+        mix_stderr=False, env={"FACULTY_PROJECT_ID": str(SOURCE_PROJECT_ID)}
+    )
+    result = runner.invoke(
+        cli,
+        [
+            "template",
+            "add-to-project-from-directory",
+            "target-project",
+            "-p",
+            "param1",
+            "1",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert (
+        result.stdout
+        == "Successfully applied template to project target-project.\n"
+    )
+
+    notifications_mock.assert_called_once_with(USER_ID, TARGET_PROJECT_ID)
+    add_to_project_from_directory_mock.assert_called_once_with(
+        SOURCE_PROJECT_ID,
+        expected_src_dir,
+        TARGET_PROJECT_ID,
+        "/",
+        {"param1": "1"},
+    )
+    mock_notifications.wait_for_completion.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
     "mock_exception, expected_message",
     [
         (
@@ -227,7 +303,8 @@ def test_add_to_project_from_directory(mocker):
                     name_conflicts=["test-file-path"]
                 ),
             ),
-            textwrap.dedent("""\
+            textwrap.dedent(
+                """\
                     App subdomain already exists: app-subdomain-1
                     App name already exists: test-app-name-1
                     App name already exists: test-app-name-2

@@ -91,7 +91,10 @@ def _retrieval_error(error):
         for prefix, errors in [
             ("Error reading app resource definition: ", error.apps),
             ("Error reading API resource definition: ", error.apis),
-            ("Error reading environment resource definition: ", error.environments),
+            (
+                "Error reading environment resource definition: ",
+                error.environments,
+            ),
             ("Error reading app job definition: ", error.jobs),
         ]
     ]
