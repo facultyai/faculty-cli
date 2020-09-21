@@ -42,6 +42,82 @@ CUSTOM_SOURCE_DIRS = [
     ("/project/path", "/project/path", "/path"),
 ]
 
+PUBLISHING_ERRORS = [
+    (GenericParsingError("generic parsing error"), "generic parsing error\n"),
+    (
+        DefaultParametersParsingError("param parsing error"),
+        "param parsing error\n",
+    ),
+    (
+        ResourceValidationFailure(
+            apps=AppValidationFailure(
+                subdomain_conflicts=["app-subdomain-1"],
+                name_conflicts=["test-app-name-1", "test-app-name-2"],
+                invalid_working_dirs=["invalid/app/dir"],
+            ),
+            apis=ApiValidationFailure(
+                subdomain_conflicts=["api-subdomain-1"],
+                name_conflicts=["test-api-name"],
+                invalid_working_dirs=["invalid/API/dir"],
+            ),
+            environments=EnvironmentValidationFailure(
+                name_conflicts=["test-env-name"], invalid_names=["invalid#env"]
+            ),
+            jobs=JobValidationFailure(
+                name_conflicts=["test-job-name"],
+                invalid_working_dirs=[],
+                invalid_names=["invalid#job"],
+            ),
+            workspace=WorkspaceValidationFailure(
+                name_conflicts=["test-file-path"]
+            ),
+        ),
+        textwrap.dedent(
+            """\
+                App subdomain already exists: app-subdomain-1
+                App name already exists: test-app-name-1
+                App name already exists: test-app-name-2
+                Invalid app working directory: invalid/app/dir
+                API subdomain already exists: api-subdomain-1
+                API name already exists: test-api-name
+                Invalid API working directory: invalid/API/dir
+                Environment name already exists: test-env-name
+                Invalid environment name: invalid#env
+                Job name already exists: test-job-name
+                Invalid job name: invalid#job
+                Workspace file already exists: test-file-path
+            """
+        ),
+    ),
+    (
+        ParameterValidationFailure(
+            errors=["test param 1 error", "test param 2 error"]
+        ),
+        textwrap.dedent(
+            """\
+            Parameter validation failed: test param 1 error
+            Parameter validation failed: test param 2 error
+        """
+        ),
+    ),
+    (
+        TemplateRetrievalFailure(
+            apps=["app error"],
+            apis=["API error"],
+            environments=["env error"],
+            jobs=["job error"],
+        ),
+        textwrap.dedent(
+            """\
+            Error reading app resource definition: app error
+            Error reading API resource definition: API error
+            Error reading environment resource definition: env error
+            Error reading app job definition: job error
+        """
+        ),
+    ),
+]
+
 
 def test_init():
     runner = CliRunner()
@@ -144,6 +220,37 @@ def test_publish_new_template_outside_project(mocker):
     assert result.stderr == (
         "Source directory must be under /project. "
         "This command is meant to be used from inside a Faculty server.\n"
+    )
+
+
+@pytest.mark.parametrize("mock_exception, expected_message", PUBLISHING_ERRORS)
+def test_publish_new_template_validation_errors(
+    mocker, mock_exception, expected_message
+):
+    mocker.patch.object(
+        AccountClient, "authenticated_user_id", return_value=USER_ID
+    )
+    mocker.patch("os.path.abspath", return_value="/project/src/")
+    mock_notifications = mocker.Mock()
+    notifications_mock = mocker.patch.object(
+        NotificationClient,
+        "publish_template_notifications",
+        return_value=mock_notifications,
+    )
+    publish_new_mock = mocker.patch.object(
+        TemplateClient, "publish_new", side_effect=mock_exception
+    )
+
+    runner = CliRunner(
+        mix_stderr=False, env={"FACULTY_PROJECT_ID": str(SOURCE_PROJECT_ID)}
+    )
+    result = runner.invoke(cli, ["template", "publish", "new", "name"])
+    assert result.exit_code == 64
+    assert result.stderr == expected_message
+
+    notifications_mock.assert_called_once_with(USER_ID, SOURCE_PROJECT_ID)
+    publish_new_mock.assert_called_once_with(
+        SOURCE_PROJECT_ID, "name", "/src/"
     )
 
 
@@ -267,88 +374,7 @@ def test_add_to_project_from_directory_custom_source_dir(
     mock_notifications.wait_for_completion.assert_called_once_with()
 
 
-@pytest.mark.parametrize(
-    "mock_exception, expected_message",
-    [
-        (
-            GenericParsingError("generic parsing error"),
-            "generic parsing error\n",
-        ),
-        (
-            DefaultParametersParsingError("param parsing error"),
-            "param parsing error\n",
-        ),
-        (
-            ResourceValidationFailure(
-                apps=AppValidationFailure(
-                    subdomain_conflicts=["app-subdomain-1"],
-                    name_conflicts=["test-app-name-1", "test-app-name-2"],
-                    invalid_working_dirs=["invalid/app/dir"],
-                ),
-                apis=ApiValidationFailure(
-                    subdomain_conflicts=["api-subdomain-1"],
-                    name_conflicts=["test-api-name"],
-                    invalid_working_dirs=["invalid/API/dir"],
-                ),
-                environments=EnvironmentValidationFailure(
-                    name_conflicts=["test-env-name"],
-                    invalid_names=["invalid#env"],
-                ),
-                jobs=JobValidationFailure(
-                    name_conflicts=["test-job-name"],
-                    invalid_working_dirs=[],
-                    invalid_names=["invalid#job"],
-                ),
-                workspace=WorkspaceValidationFailure(
-                    name_conflicts=["test-file-path"]
-                ),
-            ),
-            textwrap.dedent(
-                """\
-                    App subdomain already exists: app-subdomain-1
-                    App name already exists: test-app-name-1
-                    App name already exists: test-app-name-2
-                    Invalid app working directory: invalid/app/dir
-                    API subdomain already exists: api-subdomain-1
-                    API name already exists: test-api-name
-                    Invalid API working directory: invalid/API/dir
-                    Environment name already exists: test-env-name
-                    Invalid environment name: invalid#env
-                    Job name already exists: test-job-name
-                    Invalid job name: invalid#job
-                    Workspace file already exists: test-file-path
-                """
-            ),
-        ),
-        (
-            ParameterValidationFailure(
-                errors=["test param 1 error", "test param 2 error"]
-            ),
-            textwrap.dedent(
-                """\
-                Parameter validation failed: test param 1 error
-                Parameter validation failed: test param 2 error
-            """
-            ),
-        ),
-        (
-            TemplateRetrievalFailure(
-                apps=["app error"],
-                apis=["API error"],
-                environments=["env error"],
-                jobs=["job error"],
-            ),
-            textwrap.dedent(
-                """\
-                Error reading app resource definition: app error
-                Error reading API resource definition: API error
-                Error reading environment resource definition: env error
-                Error reading app job definition: job error
-            """
-            ),
-        ),
-    ],
-)
+@pytest.mark.parametrize("mock_exception, expected_message", PUBLISHING_ERRORS)
 def test_add_to_project_from_directory_validation_errors(
     mocker, mock_exception, expected_message
 ):
