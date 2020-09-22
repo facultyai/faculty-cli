@@ -11,14 +11,14 @@ from faculty.clients.template import (
     TemplateClient,
     GenericParsingError,
     DefaultParametersParsingError,
-    ResourceValidationFailure,
+    ResourceValidationError,
     AppValidationFailure,
     ApiValidationFailure,
     EnvironmentValidationFailure,
     JobValidationFailure,
     WorkspaceValidationFailure,
-    ParameterValidationFailure,
-    TemplateRetrievalFailure,
+    ParameterValidationError,
+    TemplateRetrievalError,
 )
 from faculty.clients.notification import NotificationClient
 from faculty.clients.project import Project
@@ -49,7 +49,7 @@ PUBLISHING_ERRORS = [
         "param parsing error\n",
     ),
     (
-        ResourceValidationFailure(
+        ResourceValidationError(
             apps=AppValidationFailure(
                 subdomain_conflicts=["app-subdomain-1"],
                 name_conflicts=["test-app-name-1", "test-app-name-2"],
@@ -90,7 +90,7 @@ PUBLISHING_ERRORS = [
         ),
     ),
     (
-        ParameterValidationFailure(
+        ParameterValidationError(
             errors=["test param 1 error", "test param 2 error"]
         ),
         textwrap.dedent(
@@ -101,7 +101,7 @@ PUBLISHING_ERRORS = [
         ),
     ),
     (
-        TemplateRetrievalFailure(
+        TemplateRetrievalError(
             apps=["app error"],
             apis=["API error"],
             environments=["env error"],

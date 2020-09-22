@@ -17,10 +17,10 @@
 import os
 
 from faculty.clients.template import (
-    TemplateRetrievalFailure,
-    ResourceValidationFailure,
+    TemplateRetrievalError,
+    ResourceValidationError,
     DefaultParametersParsingError,
-    ParameterValidationFailure,
+    ParameterValidationError,
     GenericParsingError,
 )
 
@@ -53,9 +53,9 @@ def create_blank_template():
 def publishing_error_message(error):
     formatters = {
         DefaultParametersParsingError: _simple_error_formatter,
-        ResourceValidationFailure: _resource_validation_error,
-        ParameterValidationFailure: _parameter_validation_error,
-        TemplateRetrievalFailure: _retrieval_error,
+        ResourceValidationError: _resource_validation_error,
+        ParameterValidationError: _parameter_validation_error,
+        TemplateRetrievalError: _retrieval_error,
         GenericParsingError: _simple_error_formatter,
     }
     formatter = formatters.get(type(error), _default_error_message)
