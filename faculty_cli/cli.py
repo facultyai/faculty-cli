@@ -53,7 +53,6 @@ import faculty_cli.shell
 import faculty_cli.update
 import faculty_cli.version
 import faculty_cli.templates
-from faculty_cli import templates
 
 SSH_OPTIONS = [
     "-o",
@@ -1558,7 +1557,7 @@ def add_to_project_from_directory(
             dict(parameters),
         )
     except faculty.clients.template.TemplateException as e:
-        _print_and_exit(templates.publishing_error_message(e), 64)
+        _print_and_exit(faculty_cli.templates.publishing_error_message(e), 64)
 
     try:
         notifications.wait_for_completion()
@@ -1639,7 +1638,7 @@ def publish_new_template(template, source_directory):
     try:
         template_client.publish_new(project_id, template, src_dir_in_project)
     except faculty.clients.template.TemplateException as e:
-        _print_and_exit(templates.publishing_error_message(e), 64)
+        _print_and_exit(faculty_cli.templates.publishing_error_message(e), 64)
     try:
         notifications.wait_for_completion()
         click.echo("Successfully published template `{}`.".format(template))
