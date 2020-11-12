@@ -1,5 +1,3 @@
-"""Module version information."""
-
 # Copyright 2016-2020 Faculty Science Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""Module version information."""
 
 import platform
 from pkg_resources import get_distribution, DistributionNotFound
