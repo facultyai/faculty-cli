@@ -76,8 +76,7 @@ class FacultyService(object):
     @property
     def _headers(self):
         headers = {"User-Agent": faculty_cli.version.user_agent()}
-        if not self.cookie_auth:
-            headers.update(faculty_cli.auth.auth_headers())
+        headers.update(faculty_cli.auth.auth_headers())
         return headers
 
     @property
