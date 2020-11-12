@@ -1,5 +1,3 @@
-"""Setup module for the Faculty CLI."""
-
 # Copyright 2016-2020 Faculty Science Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
