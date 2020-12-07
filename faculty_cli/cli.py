@@ -61,6 +61,8 @@ SSH_OPTIONS = [
     "BatchMode=yes",
 ]
 
+CURRENT_PROJECT_ID = os.getenv("FACULTY_PROJECT_ID")
+
 
 class AmbiguousNameError(Exception):
     """Exception when name matches multiple resources."""
@@ -574,7 +576,7 @@ def list_servers(project, all, verbose):
 
 
 @server.command(name="open")
-@click.argument("project")
+@click.argument("project", default=CURRENT_PROJECT_ID)
 @click.option("--server", is_flag=False, help="Name or ID of server to use.")
 def open_(project, server):
     """Open a Faculty server in your browser."""
@@ -599,7 +601,7 @@ def open_(project, server):
 
 
 @server.command()
-@click.argument("project")
+@click.argument("project", default=CURRENT_PROJECT_ID)
 @click.option(
     "--cores",
     type=float,
@@ -816,7 +818,7 @@ def environment():
 
 
 @environment.command(name="list")
-@click.argument("project")
+@click.argument("project", default=CURRENT_PROJECT_ID)
 @click.option(
     "-v",
     "--verbose",
@@ -966,7 +968,7 @@ def job():
 
 
 @job.command(name="list")
-@click.argument("project")
+@click.argument("project", default=CURRENT_PROJECT_ID)
 @click.option(
     "-v", "--verbose", is_flag=True, help="Print extra information about jobs."
 )
@@ -1433,7 +1435,7 @@ def rm(project, project_path, recursive):
 
 
 @datasets.command(name="ls")
-@click.argument("project")
+@click.argument("project", default=CURRENT_PROJECT_ID)
 @click.option(
     "--prefix",
     default="/",
