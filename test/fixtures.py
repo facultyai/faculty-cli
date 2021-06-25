@@ -27,7 +27,9 @@ from faculty.config import Profile
 
 
 USER_ID = uuid.uuid4()
-PROJECT = Project(id=uuid.uuid4(), name="test-project", owner_id=USER_ID)
+PROJECT = Project(
+    id=uuid.uuid4(), name="test-project", owner_id=USER_ID, archived_at=None
+)
 
 PROFILE = Profile(
     domain="services.subdomain.my.faculty.ai",
