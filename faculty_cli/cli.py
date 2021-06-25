@@ -44,7 +44,6 @@ from tabulate import tabulate
 
 import faculty_cli.auth
 import faculty_cli.config
-import faculty_cli.client
 import faculty_cli.parse
 import faculty_cli.shell
 import faculty_cli.update
@@ -411,8 +410,6 @@ class FacultyCLIGroup(click.Group):
             _print_and_exit(err, 64)
         except faculty_cli.auth.AuthenticationError as err:
             _print_and_exit(err, 77)
-        except faculty_cli.client.FacultyServiceError as err:
-            _print_and_exit(err, 69)
 
 
 @click.group(cls=FacultyCLIGroup)
