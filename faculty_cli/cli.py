@@ -101,8 +101,7 @@ def _populate_creds_file():
             client_secret=client_secret,
         )
         session = faculty.session.Session(
-            profile,
-            faculty.session.accesstoken.AccessTokenMemoryCache()
+            profile, faculty.session.accesstoken.AccessTokenMemoryCache()
         )
 
         try:
@@ -955,7 +954,9 @@ def logs(project, server, step_number):
             _print_and_exit("step {} out of range".format(step_number), 64)
 
     for step in steps:
-        for line in client.stream_environment_execution_step_logs(execution.id, step.id):
+        for line in client.stream_environment_execution_step_logs(
+            execution.id, step.id
+        ):
             click.echo(line.content)
 
 
