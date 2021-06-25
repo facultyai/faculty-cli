@@ -42,7 +42,6 @@ from faculty.clients.serveragent import ServerAgentClient
 from faculty.session import get_session
 from tabulate import tabulate
 
-import faculty_cli.config
 import faculty_cli.parse
 import faculty_cli.shell
 import faculty_cli.update
@@ -175,7 +174,7 @@ def _ensure_creds_file_present():
 def _check_credentials():
     """Check if credentials are present in environment or config file."""
     try:
-        faculty_cli.config.get_profile()
+        faculty.config.resolve_profile()
     except faculty.config.CredentialsError:
         _ensure_creds_file_present()
         _check_creds_file_perms()
