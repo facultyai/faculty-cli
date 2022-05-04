@@ -28,6 +28,7 @@ import time
 import uuid
 from distutils.version import StrictVersion
 import click
+from click.shell_completion import CompletionItem
 import faculty
 import faculty.config
 import requests
@@ -403,6 +404,35 @@ def _format_datetime(timestamp):
         return timestamp.strftime("%Y-%m-%d %H:%M")
 
 
+def _complete_project_values(ctx, param, incomplete):
+    """Complete the values for project names."""
+    return [
+        CompletionItem(project.name, help=project.id)
+        for project in _list_projects()
+        if project.name.startswith(incomplete)
+    ]
+
+
+def _complete_server_values(ctx, param, incomplete):
+    """Complete the values for server name names.
+
+    This function relies on having a "project" variable also
+    requested in the given context, and if there isn't one,
+    no suggestions are returned.
+    """
+    if "project" not in ctx.params:
+        return []
+
+    project_id = _resolve_project(ctx.params["project"])
+    return [
+        CompletionItem(server.name, help=server.id)
+        for server in _get_servers(
+            project_id=project_id, status=ServerStatus.RUNNING
+        )
+        if server.name.startswith(incomplete)
+    ]
+
+
 class FacultyCLIGroup(click.Group):
     def __call__(self, *args, **kwargs):
         try:
@@ -498,7 +528,12 @@ def server():
 
 
 @server.command(name="list")
-@click.argument("project", required=False, metavar="PROJECT")
+@click.argument(
+    "project",
+    required=False,
+    metavar="PROJECT",
+    shell_complete=_complete_project_values,
+)
 @click.option(
     "-a",
     "--all",
@@ -571,7 +606,7 @@ def list_servers(project, all, verbose):
 
 
 @server.command(name="open")
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.option("--server", is_flag=False, help="Name or ID of server to use.")
 def open_(project, server):
     """Open a Faculty server in your browser."""
@@ -596,7 +631,7 @@ def open_(project, server):
 
 
 @server.command()
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.option(
     "--cores",
     type=float,
@@ -695,8 +730,8 @@ def new(
 
 
 @server.command()
-@click.argument("project")
-@click.argument("server")
+@click.argument("project", shell_complete=_complete_project_values)
+@click.argument("server", shell_complete=_complete_server_values)
 def terminate(project, server):
     """Terminate a Faculty server."""
     _, server_id = _resolve_server(project, server, ensure_running=False)
@@ -751,8 +786,8 @@ def instance_types(verbose):
 
 
 @server.command()
-@click.argument("project")
-@click.argument("server")
+@click.argument("project", shell_complete=_complete_project_values)
+@click.argument("server", shell_complete=_complete_server_values)
 def ssh_details(project, server):
     """Echo the username, hostname and SSH port for a Faculty server.
 
@@ -775,8 +810,8 @@ def ssh_details(project, server):
 
 
 @cli.command(context_settings={"ignore_unknown_options": True})
-@click.argument("project")
-@click.argument("server")
+@click.argument("project", shell_complete=_complete_project_values)
+@click.argument("server", shell_complete=_complete_server_values)
 @click.argument("ssh_opts", nargs=-1, type=click.UNPROCESSED)
 def shell(project, server, ssh_opts):
     """Open a shell on a Faculty server.
@@ -813,7 +848,7 @@ def environment():
 
 
 @environment.command(name="list")
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.option(
     "-v",
     "--verbose",
@@ -842,8 +877,8 @@ def list_environments(project, verbose):
 
 
 @environment.command()
-@click.argument("project")
-@click.argument("server")
+@click.argument("project", shell_complete=_complete_project_values)
+@click.argument("server", shell_complete=_complete_server_values)
 @click.argument("environment")
 def apply(project, server, environment):
     """Apply an environment to the server."""
@@ -883,7 +918,7 @@ def _get_hound_url(server):
 
 
 @environment.command()
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("server")
 def status(project, server):
     """Get the execution status for an environment."""
@@ -915,7 +950,7 @@ def status(project, server):
 
 
 @environment.command()
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("server")
 @click.option(
     "--step",
@@ -967,7 +1002,7 @@ def job():
 
 
 @job.command(name="list")
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.option(
     "-v", "--verbose", is_flag=True, help="Print extra information about jobs."
 )
@@ -995,7 +1030,7 @@ def list_jobs(project, verbose):
 
 
 @job.command(name="list-runs")
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("job")
 @click.option(
     "-v", "--verbose", is_flag=True, help="Print extra information about runs."
@@ -1057,7 +1092,7 @@ def list_job_runs(project, job, verbose):
 
 
 @job.command(name="run")
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("job")
 @click.argument(
     "parameter_values",
@@ -1118,7 +1153,7 @@ def run_job(project, job, parameter_values, num_subruns):
 
 
 @job.command("logs")
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("job")
 @click.argument("run", type=faculty_cli.parse.parse_run_identifier)
 def job_run_logs(project, job, run):
@@ -1175,7 +1210,7 @@ def file():
 
 
 @file.command()
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("local")
 @click.argument("remote")
 @click.option("--server", is_flag=False, help="Name or ID of server to use.")
@@ -1208,7 +1243,7 @@ def put(project, local, remote, server):
 
 
 @file.command()
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("remote")
 @click.argument("local")
 @click.option("--server", is_flag=False, help="Name or ID of server to use.")
@@ -1274,7 +1309,7 @@ def _rsync(project, local, remote, server, rsync_opts, up):
 @file.command(
     name="sync-up", context_settings={"ignore_unknown_options": True}
 )
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("local")
 @click.argument("remote")
 @click.argument("rsync_opts", nargs=-1, type=click.UNPROCESSED)
@@ -1291,7 +1326,7 @@ def sync_up(project, local, remote, server, rsync_opts):
 @file.command(
     name="sync-down", context_settings={"ignore_unknown_options": True}
 )
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("remote")
 @click.argument("local")
 @click.argument("rsync_opts", nargs=-1, type=click.UNPROCESSED)
@@ -1306,7 +1341,7 @@ def sync_down(project, remote, local, server, rsync_opts):
 
 
 @file.command()
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("path")
 def ls(project, path):
     """List files and directories on Faculty workspace."""
@@ -1343,7 +1378,7 @@ def datasets():
 
 
 @datasets.command(name="get")
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("project_path")
 @click.argument("local_path")
 def dataset_get(project, project_path, local_path):
@@ -1358,7 +1393,7 @@ def dataset_get(project, project_path, local_path):
 
 
 @datasets.command(name="put")
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("local_path")
 @click.argument("project_path")
 def dataset_put(project, local_path, project_path):
@@ -1371,7 +1406,7 @@ def dataset_put(project, local_path, project_path):
 
 
 @datasets.command()
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("source_path")
 @click.argument("destination_path")
 def mv(project, source_path, destination_path):
@@ -1386,7 +1421,7 @@ def mv(project, source_path, destination_path):
 
 
 @datasets.command()
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("source_path")
 @click.argument("destination_path")
 @click.option(
@@ -1412,7 +1447,7 @@ def cp(project, source_path, destination_path, recursive):
 
 
 @datasets.command()
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.argument("project_path")
 @click.option(
     "--recursive",
@@ -1434,7 +1469,7 @@ def rm(project, project_path, recursive):
 
 
 @datasets.command(name="ls")
-@click.argument("project")
+@click.argument("project", shell_complete=_complete_project_values)
 @click.option(
     "--prefix",
     default="/",
