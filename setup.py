@@ -56,7 +56,7 @@ setup(
         "python-dateutil",
         "requests",
         "tabulate",
-        "faculty>=0.26.0",
+        "faculty>=0.30.2",
     ],
     entry_points={"console_scripts": ["faculty=faculty_cli.cli:cli"]},
 )
