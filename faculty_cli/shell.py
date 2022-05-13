@@ -14,4 +14,4 @@
 
 """Shell helper functions."""
 
-from shlex import quote
+from shlex import quote  # noqa: F401
