@@ -1,35 +1,17 @@
-"""Shell helper functions.
-
-Vendored from https://github.com/python/cpython/blob/3.6/Lib/shlex.py
-"""
-
-# Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-# 2011, 2012, 2013, 2014, 2015, 2016, 2017 Python Software Foundation; All
-# Rights Reserved
+# Copyright 2016-2020 Faculty Science Limited
 #
-# This file is distributed under the terms of the Python Software Foundation
-# License Version 2: see https://github.com/python/cpython/blob/3.6/LICENSE
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-from __future__ import unicode_literals
+"""Shell helper functions."""
 
-import six
-
-
-if six.PY3:
-    from shlex import quote
-
-else:
-    import re
-
-    _find_unsafe = re.compile(r"[^\w@%+=:,./-]").search
-
-    def quote(s):
-        """Return a shell-escaped version of the string *s*."""
-        if not s:
-            return "''"
-        if _find_unsafe(s) is None:
-            return s
-
-        # use single quotes, and put single quotes into double quotes
-        # the string $'b is then quoted as '$'"'"'b'
-        return "'" + s.replace("'", "'\"'\"'") + "'"
+from shlex import quote

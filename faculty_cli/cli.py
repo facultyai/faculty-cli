@@ -14,8 +14,6 @@
 
 """Command line interface."""
 
-from __future__ import division
-
 import contextlib
 import operator
 import os

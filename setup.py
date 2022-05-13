@@ -55,7 +55,6 @@ setup(
         "click",
         "python-dateutil",
         "requests",
-        "six",
         "tabulate",
         "faculty>=0.26.0",
     ],
