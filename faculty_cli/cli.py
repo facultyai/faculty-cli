@@ -42,7 +42,6 @@ from faculty.clients.serveragent import ServerAgentClient
 from faculty.session import get_session
 from tabulate import tabulate
 
-import faculty_cli.auth
 import faculty_cli.config
 import faculty_cli.parse
 import faculty_cli.shell
@@ -102,11 +101,17 @@ def _populate_creds_file():
             client_id=client_id,
             client_secret=client_secret,
         )
+        session = faculty.session.Session(
+            profile,
+            faculty.session.accesstoken.AccessTokenMemoryCache()
+        )
 
-        if faculty_cli.auth.credentials_valid(profile):
+        try:
+            session.access_token()
+        except Exception:
+            click.echo("Invalid credentials. Please try again.", err=True)
+        else:
             break
-
-        click.echo("Invalid credentials. Please try again.", err=True)
 
     credentials = textwrap.dedent(
         """\
@@ -408,8 +413,6 @@ class FacultyCLIGroup(click.Group):
             _print_and_exit(err, 64)
         except NameNotFoundError as err:
             _print_and_exit(err, 64)
-        except faculty_cli.auth.AuthenticationError as err:
-            _print_and_exit(err, 77)
 
 
 @click.group(cls=FacultyCLIGroup)
