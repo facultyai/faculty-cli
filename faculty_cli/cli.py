@@ -38,12 +38,10 @@ from faculty.clients.server import (
     ServerStatus,
     SharedServerResources,
 )
+from faculty.clients.serveragent import ServerAgentClient
+from faculty.session import get_session
 from tabulate import tabulate
 
-import faculty_cli.auth
-import faculty_cli.config
-import faculty_cli.client
-import faculty_cli.hound
 import faculty_cli.parse
 import faculty_cli.shell
 import faculty_cli.update
@@ -102,11 +100,16 @@ def _populate_creds_file():
             client_id=client_id,
             client_secret=client_secret,
         )
+        session = faculty.session.Session(
+            profile, faculty.session.accesstoken.AccessTokenMemoryCache()
+        )
 
-        if faculty_cli.auth.credentials_valid(profile):
+        try:
+            session.access_token()
+        except Exception:
+            click.echo("Invalid credentials. Please try again.", err=True)
+        else:
             break
-
-        click.echo("Invalid credentials. Please try again.", err=True)
 
     credentials = textwrap.dedent(
         """\
@@ -170,7 +173,7 @@ def _ensure_creds_file_present():
 def _check_credentials():
     """Check if credentials are present in environment or config file."""
     try:
-        faculty_cli.config.get_profile()
+        faculty.config.resolve_profile()
     except faculty.config.CredentialsError:
         _ensure_creds_file_present()
         _check_creds_file_perms()
@@ -408,10 +411,6 @@ class FacultyCLIGroup(click.Group):
             _print_and_exit(err, 64)
         except NameNotFoundError as err:
             _print_and_exit(err, 64)
-        except faculty_cli.auth.AuthenticationError as err:
-            _print_and_exit(err, 77)
-        except faculty_cli.client.FacultyServiceError as err:
-            _print_and_exit(err, 69)
 
 
 @click.group(cls=FacultyCLIGroup)
@@ -894,8 +893,9 @@ def status(project, server):
     server = server_client.get(project_id, server_id)
 
     hound_url = _get_hound_url(server)
+    session = get_session()
 
-    client = faculty_cli.hound.Hound(hound_url)
+    client = ServerAgentClient(hound_url, session)
     execution = client.latest_environment_execution()
 
     if execution is None:
@@ -903,14 +903,14 @@ def status(project, server):
         _print_and_exit(msg, 64)
 
     click.echo("Latest environment execution:")
-    click.echo("  Status: {}".format(execution.status))
+    click.echo("  Status: {}".format(execution.status.value))
     for i, environment in enumerate(execution.environments):
         click.echo("")
         click.echo("Environment {}".format(i))
         for j, step in enumerate(environment.steps):
             click.echo("")
             click.echo("Step {}:".format(j))
-            click.echo("  Status:  {}".format(step.status))
+            click.echo("  Status:  {}".format(step.status.value))
             click.echo("  Command: {}".format(_format_command(step.command)))
 
 
@@ -932,8 +932,9 @@ def logs(project, server, step_number):
     server = server_client.get(project_id, server_id)
 
     hound_url = _get_hound_url(server)
+    session = get_session()
 
-    client = faculty_cli.hound.Hound(hound_url)
+    client = ServerAgentClient(hound_url, session)
     execution = client.latest_environment_execution()
 
     if execution is None:
@@ -953,8 +954,10 @@ def logs(project, server, step_number):
             _print_and_exit("step {} out of range".format(step_number), 64)
 
     for step in steps:
-        for line in client.stream_environment_execution_step_logs(step):
-            click.echo(line)
+        for line in client.stream_environment_execution_step_logs(
+            execution.id, step.id
+        ):
+            click.echo(line.content)
 
 
 @cli.group()
