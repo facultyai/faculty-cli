@@ -14,8 +14,6 @@
 
 """Command line interface."""
 
-from __future__ import division
-
 import contextlib
 import operator
 import os
@@ -1198,7 +1196,7 @@ def put(project, local, remote, server):
                 "-P",
                 str(details.port),
                 os.path.expanduser(local),
-                u"{}@{}:{}".format(
+                "{}@{}:{}".format(
                     details.username, details.hostname, escaped_remote
                 ),
             ]
@@ -1230,7 +1228,7 @@ def get(project, remote, local, server):
                 filename,
                 "-P",
                 str(details.port),
-                u"{}@{}:{}".format(
+                "{}@{}:{}".format(
                     details.username, details.hostname, escaped_remote
                 ),
                 os.path.expanduser(local),
@@ -1250,11 +1248,11 @@ def _rsync(project, local, remote, server, rsync_opts, up):
     escaped_remote = faculty_cli.shell.quote(remote)
     if up:
         path_from = local
-        path_to = u"{}@{}:{}".format(
+        path_to = "{}@{}:{}".format(
             details.username, details.hostname, escaped_remote
         )
     else:
-        path_from = u"{}@{}:{}".format(
+        path_from = "{}@{}:{}".format(
             details.username, details.hostname, escaped_remote
         )
         path_to = local

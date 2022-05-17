@@ -9,3 +9,6 @@ exclude = '''
   | \.eggs
 )/
 '''
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
