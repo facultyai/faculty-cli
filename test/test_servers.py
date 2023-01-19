@@ -23,6 +23,7 @@ from test.fixtures import (
     DEDICATED_SERVER,
     DEDICATED_RESOURCE,
     SHARED_RESOURCE,
+    SSH_DETAILS,
 )
 
 
@@ -54,7 +55,7 @@ def test_list_all_servers_no_servers(
     mocker.patch("faculty_cli.cli._list_user_servers", return_value=[])
     result = runner.invoke(cli, ["server", "list"])
     assert result.exit_code == 0
-    assert result.output == ""
+    assert result.output == "No servers.\n"
 
 
 def test_list_all_servers(
@@ -177,6 +178,53 @@ def test_list_servers_verbose(
             "Started",
         ),
         tablefmt="plain",
+    )
+
+
+def test_list_all_servers_ssh_config(
+    mocker,
+    mock_update_check,
+    mock_check_credentials,
+    mock_profile,
+    mock_user_id,
+):
+    runner = CliRunner()
+    mocker.patch("faculty_cli.cli._list_projects", return_value=[PROJECT])
+    mocker.patch(
+        "faculty_cli.cli._list_user_servers", return_value=[DEDICATED_SERVER]
+    )
+    mocker.patch("faculty_cli.cli._get_ssh_details", return_value=SSH_DETAILS)
+    result = runner.invoke(
+        cli,
+        ["server", "list", "--format", "ssh-config"],
+    )
+    assert result.exit_code == 0
+    assert (
+        result.output
+        == f"Host test-server-test-project\n    HostName test-server\n    User faculty\n    Port 1234\n"
+    )
+
+
+def test_list_all_servers_verbose_error(
+    mocker,
+    mock_update_check,
+    mock_check_credentials,
+    mock_profile,
+    mock_user_id,
+):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["server", "list", "--verbose", "--format", "ssh-config"],
+    )
+    assert result.exit_code == 2
+    assert (
+        result.output
+        == """Usage: cli server list [OPTIONS] PROJECT
+Try 'cli server list --help' for help.
+
+Error: You can't specify the `--verbose` flag and also pass the `--format` option
+"""
     )
 
 
