@@ -22,6 +22,7 @@ from faculty.clients.server import (
     SharedServerResources,
     Server,
     Service,
+    SSHDetails,
 )
 from faculty.config import Profile
 
@@ -70,4 +71,9 @@ DEDICATED_SERVER = Server(
     created_at=SERVER_CREATION_DATE,
     status=ServerStatus.RUNNING,
     services=[SERVICE],
+)
+
+
+SSH_DETAILS = SSHDetails(
+    hostname="test-server", port=1234, username="faculty", key="not-a-real-key"
 )
