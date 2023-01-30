@@ -528,7 +528,8 @@ def list_servers(project, all, verbose, format):
         else:
             raise click.exceptions.BadOptionUsage(
                 "format",
-                "You can't specify the `--verbose` flag and also pass the `--format` option",
+                "You can't specify the `--verbose` flag and also pass the "
+                "`--format` option",
             )
 
     status_filter = None if all else ServerStatus.RUNNING

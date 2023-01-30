@@ -199,9 +199,9 @@ def test_list_all_servers_ssh_config(
         ["server", "list", "--format", "ssh-config"],
     )
     assert result.exit_code == 0
-    assert (
-        result.output
-        == f"Host test-server-test-project\n    HostName test-server\n    User faculty\n    Port 1234\n"
+    assert result.output == (
+        "Host test-server-test-project\n    HostName test-server\n    User "
+        "faculty\n    Port 1234\n"
     )
 
 
@@ -217,14 +217,14 @@ def test_list_all_servers_verbose_error(
         cli,
         ["server", "list", "--verbose", "--format", "ssh-config"],
     )
-    assert result.exit_code == 2
-    assert (
-        result.output
-        == """Usage: cli server list [OPTIONS] PROJECT
-Try 'cli server list --help' for help.
 
-Error: You can't specify the `--verbose` flag and also pass the `--format` option
-"""
+    assert result.exit_code == 2
+    assert result.output == (
+        "Usage: cli server list [OPTIONS] PROJECT\n"
+        "Try 'cli server list --help' for help.\n"
+        "\n"
+        "Error: You can't specify the `--verbose` flag "
+        "and also pass the `--format` option\n"
     )
 
 
