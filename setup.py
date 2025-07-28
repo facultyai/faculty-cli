@@ -56,8 +56,7 @@ setup(
         "python-dateutil",
         "requests",
         "tabulate",
-        "faculty>=0.30.2",
-        "marshmallow<4",  # TODO: this is an upstream dependency, remove it once minimul `faculty` version is bumped
+        "faculty>=0.31.0",
         "setuptools",  # TODO: this is required to supply `distutils` until we remove that dependency in the code
     ],
     entry_points={"console_scripts": ["faculty=faculty_cli.cli:cli"]},
