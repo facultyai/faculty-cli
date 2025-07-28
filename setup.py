@@ -57,7 +57,9 @@ setup(
         "requests",
         "tabulate",
         "faculty>=0.31.0",
-        "setuptools",  # TODO: this is required to supply `distutils` until we remove that dependency in the code
+        # TODO: setuptools is required to supply `distutils`
+        # until we remove that dependency in the code
+        "setuptools",
     ],
     entry_points={"console_scripts": ["faculty=faculty_cli.cli:cli"]},
 )
