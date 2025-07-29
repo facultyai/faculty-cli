@@ -50,13 +50,16 @@ setup(
     keywords="data science platform",
     packages=find_packages(),
     setup_requires=["setuptools_scm"],
-    python_requires=">=3.6",
+    python_requires=">=3.9",
     install_requires=[
         "click",
         "python-dateutil",
         "requests",
         "tabulate",
-        "faculty>=0.30.2",
+        "faculty>=0.31.0",
+        # TODO: setuptools is required to supply `distutils`
+        # until we remove that dependency in the code
+        "setuptools",
     ],
     entry_points={"console_scripts": ["faculty=faculty_cli.cli:cli"]},
 )
