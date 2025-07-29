@@ -509,12 +509,29 @@ def server():
     "-v",
     "--verbose",
     is_flag=True,
-    help="Print extra information about servers.",
+    help="",
 )
-def list_servers(project, all, verbose):
+@click.option(
+    "-f",
+    "--format",
+    type=click.Choice(["list", "table", "ssh-config"], case_sensitive=False),
+    help="Output format.",
+)
+def list_servers(project, all, verbose, format):
     """List your Faculty servers.
 
     If you do not specify a project, all servers will be listed."""
+    if verbose:
+        if format is None:
+            # Retain legacy behaviour for verbose flag.
+            format = "table"
+        else:
+            raise click.exceptions.BadOptionUsage(
+                "format",
+                "You can't specify the `--verbose` flag and also pass the "
+                "`--format` option",
+            )
+
     status_filter = None if all else ServerStatus.RUNNING
     if not project:
         projects = {project.id: project.name for project in _list_projects()}
@@ -558,16 +575,36 @@ def list_servers(project, all, verbose):
                 server.created_at.strftime("%Y-%m-%d %H:%M"),
             )
         )
-    if not found_servers and verbose:
+
+    if not found_servers:
         click.echo("No servers.")
-    elif project and verbose:
-        servers = [server[1:] for server in found_servers]
-        click.echo(tabulate(servers, headers[1:], tablefmt="plain"))
-    elif project or not verbose:
+        return
+
+    if format == "table":
+        if project:
+            found_servers = [server[1:] for server in found_servers]
+            headers = headers[1:]
+        click.echo(tabulate(found_servers, headers, tablefmt="plain"))
+
+    elif format == "ssh-config":
+        config_entries = []
+        for server in found_servers:
+            server_name = server[1]
+            project_name = project if project else server[0]
+            ssh_details = _get_ssh_details(project_name, server_name)
+            host = f"{server_name}-{project_name.lower().replace(' ', '_')}"
+            config_entries.append(
+                f"""Host {host}
+    HostName {ssh_details.hostname}
+    User {ssh_details.username}
+    Port {ssh_details.port}"""
+            )
+
+        click.echo("\n".join(config_entries))
+
+    else:
         for server in found_servers:
             click.echo(server[1])
-    elif not project and verbose:
-        click.echo(tabulate(found_servers, headers, tablefmt="plain"))
 
 
 @server.command(name="open")
